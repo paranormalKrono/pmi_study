@@ -36,9 +36,9 @@ void main()
 
 	//bigint_dbg();
 
-	binarytrees_dbg();
+	//binarytrees_dbg();
 	
-	//poly_dbg();
+	poly_dbg();
 
 	//printf("%f", M_PI);
 

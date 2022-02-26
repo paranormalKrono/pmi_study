@@ -1,100 +1,108 @@
 #include "Polynomials.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
-poly* poly_parse_state0(char* cur_str_index);
-poly* poly_get(const char* str) 
+poly* poly_parse(const char* str);
+poly* poly_get(const char* str)
 {
-	poly* p = poly_zero();
-	
+	return poly_parse(str);
+}
+
+typedef enum parse_states
+{
+	stateS,
+	stateX,
+	stateD,
+	stateE
+} parse_states;
+
+poly* poly_parse(const char* str)
+{
 	char* cur_str_index = str;
-	while (*cur_str_index != '\0')
-	{
-		poly_addition(p, poly_parse_state0(&cur_str_index));
-	}
-
-	return p;
-}
-
-void poly_parse_state1(poly* p, char** cur_str_index);
-poly* poly_parse_state0(char** cur_str_index)
-{
 	poly* p = poly_zero();
-	switch (**cur_str_index)
+	parse_states cur_state = stateS;
+	bool isNegative = false;
+	bool is_cur_poly_parsed = false;
+
+	poly* cur_p = poly_zero();
+
+	while (*cur_str_index != '\0' || is_cur_poly_parsed) 
 	{
-		case '-':
-			++*cur_str_index;
-			poly_parse_state1(p, cur_str_index);
-			p->coeff *= -1;
-			return p;
+		switch (cur_state)
+		{
+		case stateS:
+			if (is_cur_poly_parsed)
+			{
+				if (isNegative) 
+				{
+					isNegative = false;
+					cur_p->coeff = -cur_p->coeff;
+				}
+				poly_addition(p, cur_p);
+				is_cur_poly_parsed = false;
+				cur_p = poly_zero();
+			}
+			switch (*cur_str_index)
+			{
+			case '-':
+				isNegative = !isNegative;
+				++cur_str_index;
+				break;
+			case '+':
+				++cur_str_index;
+				break;
+			case 'x':
+				cur_state = stateX;
+				break;
+			case '0': case '1': case '2': case '3': case  '4': case  '5': case  '6': case  '7': case '8': case  '9':
+				cur_state = stateD;
+				break;
+			case '\0':
+				continue;
+			default:
+				++cur_str_index;
+				break;
+			}
 			break;
-		case '+':
-			++*cur_str_index;
-			poly_parse_state1(p, cur_str_index);
-			return p;
+		case stateX:
+			if (cur_p->coeff == 0) cur_p->coeff = 1;
+			cur_p->exp = 1;
+			++cur_str_index;
+			if (*cur_str_index == '^')
+				cur_state = stateE;
+			else
+			{
+				cur_state = stateS;
+				is_cur_poly_parsed = true;
+			}
 			break;
-	default:
-		poly_parse_state1(p, cur_str_index);
-		return p;
-		break;
-	}
-}
+		case stateE:
+			++cur_str_index;
+			cur_state = stateD;
+			break;
+		case stateD:
+			if (cur_p->coeff > 0) 
+				cur_p->exp = strtol(cur_str_index, &cur_str_index, 10);
+			else
+				cur_p->coeff = strtol(cur_str_index, &cur_str_index, 10);
 
-void poly_parse_state2(poly* p, char** cur_str_index);
-void poly_parse_state1(poly* p, char** cur_str_index)
-{
-	switch (**cur_str_index)
-	{
-	case '0':
-		if (p->coeff != 0)
-		{
-			p->coeff *= 10;
+			if (*cur_str_index == 'x')
+				cur_state = stateX;
+			else
+			{
+				cur_state = stateS;
+				is_cur_poly_parsed = true;
+			}
+				break;
+		default:
+			++cur_str_index;
+			break;
 		}
-		++*cur_str_index;
-		poly_parse_state1(p, cur_str_index);
-		break;
-
-	case '1': case '2': case '3': case  '4': case  '5': case  '6': case  '7': case '8': case  '9':
-		p->coeff = p->coeff * 10 + (**cur_str_index - '0');
-		++* cur_str_index;
-		poly_parse_state1(p, cur_str_index);
-		break;
-	case 'x':
-		if (p->coeff == 0) 
-		{
-			p->coeff = 1;
-		}
-		if (*(++*cur_str_index) == '^') 
-		{
-			++*cur_str_index;
-			poly_parse_state2(p, cur_str_index);
-		}
-		break;
-	default:
-		break;
 	}
-}
-
-void poly_parse_state2(poly* p, char** cur_str_index)
-{
-	switch (**cur_str_index)
-	{
-	case '0':
-		if (p->exp != 0)
-		{
-			p->exp *= 10;
-		}
-		++* cur_str_index;
-		poly_parse_state2(p, cur_str_index);
-		break;
-	case '1': case '2': case '3': case  '4': case  '5': case  '6': case  '7': case '8': case  '9':
-		p->exp = p->exp * 10 + (**cur_str_index - '0');
-		++* cur_str_index;
-		poly_parse_state2(p, cur_str_index);
-		break;
-	default:
-		break;
-	}
+	poly_free(cur_p);
+	return p;
 }
 
 poly* poly_zero() 
@@ -108,53 +116,100 @@ poly* poly_zero()
 
 void poly_show(const poly* p) 
 {
-	printf(poly_tostring(p));
+	printf("%s\n", poly_tostring(p));
 }
 
 char* poly_tostring(const poly* p) 
 {
-	char* result;
-	if (p->coeff != 0) 
+	char* current;
+	if (p->coeff)
 	{
-		result = (char*)malloc();
-		snprintf(result, sizeof(char)* strlen(result), "%dx^%d", p->coeff, p->exp);
-	}
-	else 
-	{
-		result = "0";
-	}
-	if (p->next != NULL)
-	{
-		if (p->next->coeff > 0) 
+		if (p->exp == 0)
 		{
-			result += '+';
+			current = (char*)malloc(sizeof(char) * 17);
+			snprintf(current, sizeof(char) * strlen(current), "%d", p->coeff);
 		}
-		snprintf(result, sizeof(char) * 30, "%s%s", result, poly_tostring(p->next));
+		else if (p->exp == 1)
+		{
+			if (p->coeff == 1) 
+			{
+				current = "x";
+			}
+			else
+			{
+				current = (char*)malloc(sizeof(char) * 18);
+				snprintf(current, sizeof(char) * strlen(current), "%dx", p->coeff);
+			}
+		}
+		else 
+		{
+			current = (char*)malloc(sizeof(char) * 37);
+			snprintf(current, sizeof(char) * strlen(current), "%dx^%d", p->coeff, p->exp);
+		}
+	}
+	else
+	{
+		current = "";
+	}
+
+	if (p->next)
+	{
+		char* next = poly_tostring(p->next);
+		char* result = (char*)malloc(sizeof(char) * (strlen(current) + strlen(next) + 1));
+		if (p->next->coeff > 0)
+			if (current == "0")
+				snprintf(result, strlen(result), "%s", next);
+			else
+				snprintf(result, strlen(result), "%s+%s", current, next);
+		else
+			snprintf(result, strlen(result), "%s%s", current, next);
 		return result;
 	}
-	return result;
+
+	if (current == "") 
+		current = "0";
+	return current;
+
 }
 
 void poly_addition(poly* left, const poly* right)
 {
 	if (right == NULL) // Всё прибавили
-	{
 		return;
-	}
-	if (left->exp == right->exp) // Складываем одночлены
+
+	if (left->exp == right->exp) // Складываем одночлены и идём дальше
 	{
 		left->coeff += right->coeff;
 		poly_addition(left->next, right->next);
 	}
-	else if (left->next == NULL)
+	else if (left->next == NULL) // Вставляем right 
 	{
 		left->next = poly_zero();
 		left->next->exp = right->exp;
 		poly_addition(left->next, right);
 	}
-	else if (left->next->exp <= right->exp)
-	{
+	else if (left->next->exp < right->exp) // Идём дальше
 		poly_addition(left->next, right);
+	else if (left->next->exp == right->exp) // Смотрим коеффициенты
+	{
+		if (left->next->coeff == -right->coeff) // Если они противоположные
+		{
+			if (left->next->next == NULL)
+			{
+				poly_free(left->next);
+				left->next = NULL;
+			}
+			else
+			{
+				poly* l_next = left->next->next;
+				left->next->next = NULL;
+				poly_free(left->next);
+				left->next = l_next;
+			}
+			poly_addition(left->next, right->next);
+		}
+		else
+			poly_addition(left->next, right);
 	}
 	else
 	{
@@ -162,6 +217,7 @@ void poly_addition(poly* left, const poly* right)
 		poly* l_next = left->next;
 		left->next = poly_zero();
 		left->next->exp = right->exp;
+		left->next->coeff = right->coeff;
 		left->next->next = l_next;
 		poly_addition(left->next, right->next);
 	}

@@ -1,3 +1,16 @@
 Debug/
 Project1.vcxproj
 Project1.vcxproj.filters
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+*.ipch
+*.testlog
+*.manifest
+*.gitignore
+*.sqlite
+Project1.sdf
+Project1.sln
+.vs/ProjectSettings.json
+.vs/VSWorkspaceState.json
