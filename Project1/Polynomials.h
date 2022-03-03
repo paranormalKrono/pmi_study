@@ -7,12 +7,12 @@ typedef struct poly {
 	struct poly* next;
 } poly;
 
-poly* poly_get(const char* str);
-poly* poly_zero();
+poly* poly_parse(const char* str);
+poly* poly_monomial(int coeff, int exp);
 void poly_show(const poly* p);
 char* poly_tostring(poly* p);
-void poly_addition(poly* left, const poly* right);
-poly* poly_subtraction(poly* left, const poly* right);
+void poly_addition(const poly** left, const poly* right);
+poly* poly_multiplication(const poly* left, const poly* right);
 void poly_free(poly* pol);
 
 #endif // _POLYNOMIALS_H_

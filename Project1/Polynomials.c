@@ -4,12 +4,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-poly* poly_parse(const char* str);
-poly* poly_get(const char* str)
-{
-	return poly_parse(str);
-}
-
 typedef enum parse_states
 {
 	stateS,
@@ -18,31 +12,28 @@ typedef enum parse_states
 	stateE
 } parse_states;
 
-poly* poly_parse(const char* str)
+poly* poly_parse(const char* str) // +Exception
 {
 	char* cur_str_index = str;
-	poly* p = poly_zero();
+	poly* p = poly_monomial(0, 0);
 	parse_states cur_state = stateS;
 	bool isNegative = false;
-	bool is_cur_poly_parsed = false;
+	int c = 0, e = 0;
 
-	poly* cur_p = poly_zero();
-
-	while (*cur_str_index != '\0' || is_cur_poly_parsed) 
+	while (*cur_str_index != '\0' || c) 
 	{
 		switch (cur_state)
 		{
 		case stateS:
-			if (is_cur_poly_parsed)
+			if (c)
 			{
 				if (isNegative) 
 				{
 					isNegative = false;
-					cur_p->coeff = -cur_p->coeff;
+					c = -c;
 				}
-				poly_addition(p, cur_p);
-				is_cur_poly_parsed = false;
-				cur_p = poly_zero();
+				poly_addition(&p, poly_monomial(c, e));
+				c = e = 0;
 			}
 			switch (*cur_str_index)
 			{
@@ -67,15 +58,14 @@ poly* poly_parse(const char* str)
 			}
 			break;
 		case stateX:
-			if (cur_p->coeff == 0) cur_p->coeff = 1;
-			cur_p->exp = 1;
+			if (c == 0) c = 1;
+			e = 1;
 			++cur_str_index;
 			if (*cur_str_index == '^')
 				cur_state = stateE;
 			else
 			{
 				cur_state = stateS;
-				is_cur_poly_parsed = true;
 			}
 			break;
 		case stateE:
@@ -83,34 +73,32 @@ poly* poly_parse(const char* str)
 			cur_state = stateD;
 			break;
 		case stateD:
-			if (cur_p->coeff > 0) 
-				cur_p->exp = strtol(cur_str_index, &cur_str_index, 10);
+			if (c > 0) 
+				e = strtol(cur_str_index, &cur_str_index, 10);
 			else
-				cur_p->coeff = strtol(cur_str_index, &cur_str_index, 10);
+				c = strtol(cur_str_index, &cur_str_index, 10);
 
 			if (*cur_str_index == 'x')
 				cur_state = stateX;
 			else
-			{
 				cur_state = stateS;
-				is_cur_poly_parsed = true;
-			}
-				break;
+			break;
 		default:
 			++cur_str_index;
 			break;
 		}
 	}
-	poly_free(cur_p);
 	return p;
 }
 
-poly* poly_zero() 
+poly* poly_monomial(int coeff, int exp) 
 {
 	poly* p = (poly*)malloc(sizeof(poly));
-	p->coeff = 0;
-	p->exp = 0;
-	p->next = NULL;
+	if (p) {
+		p->coeff = coeff;
+		p->exp = exp;
+		p->next = NULL;
+	}
 	return p;
 }
 
@@ -121,122 +109,176 @@ void poly_show(const poly* p)
 
 char* poly_tostring(const poly* p) 
 {
-	char* current;
-	if (p->coeff)
+	char* current, *result = NULL, *new_result;
+	poly* cur_poly = p;
+	while (cur_poly)
 	{
-		if (p->exp == 0)
+		current = NULL;
+		if (cur_poly->coeff)
 		{
-			current = (char*)malloc(sizeof(char) * 17);
-			snprintf(current, sizeof(char) * strlen(current), "%d", p->coeff);
-		}
-		else if (p->exp == 1)
-		{
-			if (p->coeff == 1) 
+			if (cur_poly->exp == 0)
 			{
-				current = "x";
+				current = (char*)malloc(sizeof(char) * 17);
+				snprintf(current, sizeof(char) * strlen(current), "%d", cur_poly->coeff);
+			}
+			else if (cur_poly->exp == 1)
+			{
+				if (cur_poly->coeff == 1)
+					current = "x";
+				else
+				{
+					current = (char*)malloc(sizeof(char) * 18);
+					snprintf(current, sizeof(char) * strlen(current), "%dx", cur_poly->coeff);
+				}
 			}
 			else
 			{
-				current = (char*)malloc(sizeof(char) * 18);
-				snprintf(current, sizeof(char) * strlen(current), "%dx", p->coeff);
+				current = (char*)malloc(sizeof(char) * 37);
+				snprintf(current, sizeof(char) * strlen(current), "%dx^%d", cur_poly->coeff, cur_poly->exp);
 			}
 		}
-		else 
-		{
-			current = (char*)malloc(sizeof(char) * 37);
-			snprintf(current, sizeof(char) * strlen(current), "%dx^%d", p->coeff, p->exp);
-		}
-	}
-	else
-	{
-		current = "";
-	}
-
-	if (p->next)
-	{
-		char* next = poly_tostring(p->next);
-		char* result = (char*)malloc(sizeof(char) * (strlen(current) + strlen(next) + 1));
-		if (p->next->coeff > 0)
-			if (current == "0")
-				snprintf(result, strlen(result), "%s", next);
-			else
-				snprintf(result, strlen(result), "%s+%s", current, next);
 		else
-			snprintf(result, strlen(result), "%s%s", current, next);
-		return result;
+			current = "";
+
+		if (result)
+		{
+			new_result = (char*)malloc(sizeof(char) * (strlen(result) + strlen(current) + 3));
+
+			if (cur_poly->coeff > 0)
+				if (current == "0")
+					snprintf(new_result, strlen(new_result), "%s", current);
+				else
+					snprintf(new_result, strlen(new_result), "%s+%s", result, current);
+			else
+				snprintf(new_result, strlen(new_result), "%s%s", result, current);
+			free(result);
+			result = new_result;
+			new_result = NULL;
+		}
+		else
+			result = current;
+
+		cur_poly = cur_poly->next;
 	}
 
-	if (current == "") 
-		current = "0";
-	return current;
+	if (result == "") 
+		result = "0";
+	return result;
 
 }
 
-void poly_addition(poly* left, const poly* right)
+/// <summary>
+/// Poly in exp-increasing order
+/// </summary>
+/// <param name="left"></param>
+/// <param name="right"></param>
+void poly_addition(const poly** left, const poly* right)
 {
-	if (right == NULL) // Всё прибавили
-		return;
+	if (left == NULL) 
+	{
+		left = poly_monomial(0, 0);
+	}
+	poly* left_cur = *left, *right_cur = right, *left_prev = NULL;
 
-	if (left->exp == right->exp) // Складываем одночлены и идём дальше
+	while (right_cur)
 	{
-		left->coeff += right->coeff;
-		poly_addition(left->next, right->next);
-	}
-	else if (left->next == NULL) // Вставляем right 
-	{
-		left->next = poly_zero();
-		left->next->exp = right->exp;
-		poly_addition(left->next, right);
-	}
-	else if (left->next->exp < right->exp) // Идём дальше
-		poly_addition(left->next, right);
-	else if (left->next->exp == right->exp) // Смотрим коеффициенты
-	{
-		if (left->next->coeff == -right->coeff) // Если они противоположные
+		if (left_cur == NULL) // Копируем элементы из right в конец left 
 		{
-			if (left->next->next == NULL)
+			while (right_cur)
 			{
-				poly_free(left->next);
-				left->next = NULL;
+				left_prev->next = left_cur = poly_monomial(right_cur->coeff, right_cur->exp);
+				right_cur = right_cur->next;
 			}
-			else
-			{
-				poly* l_next = left->next->next;
-				left->next->next = NULL;
-				poly_free(left->next);
-				left->next = l_next;
-			}
-			poly_addition(left->next, right->next);
+			break;
 		}
-		else
-			poly_addition(left->next, right);
-	}
-	else
-	{
-		// Если правый можно поставить между левым и следующим
-		poly* l_next = left->next;
-		left->next = poly_zero();
-		left->next->exp = right->exp;
-		left->next->coeff = right->coeff;
-		left->next->next = l_next;
-		poly_addition(left->next, right->next);
+		else if (left_cur->exp == right_cur->exp)
+		{
+			left_cur->coeff += right_cur->coeff;
+			if (!left_cur->coeff) 
+			{
+				if (left_prev) // Соединяем левый моном с правым и очищаем текущий
+				{
+					left_prev->next = left_cur->next;
+					left_cur->next = NULL;
+					poly_free(left_cur);
+					left_cur = left_prev->next;
+				}
+				else // Меняем начало полинома
+				{
+					*left = (*left)->next;
+					left_cur->next = NULL;
+					poly_free(left_cur);
+					left_cur = *left;
+				}
+			}
+			else // Если коеффициенты не противоположны, складываем одночлены
+			{
+				left_prev = left_cur;
+				left_cur = left_cur->next;
+			}
+			right_cur = right_cur->next;
+		}
+		else if (left_cur->exp < right_cur->exp) // Переходим к следующим мономам
+		{
+			left_prev = left_cur;
+			left_cur = left_cur->next;
+		}
+		else // Вставляем моном слева
+		{
+			if (left_prev) // Вставляем между левым и текущим
+			{
+				left_prev->next = poly_monomial(right_cur->coeff, right_cur->exp);
+				left_prev->next->next = left_cur;
+				left_prev = left_prev->next;
+			}
+			else // Меняем начало полинома
+			{
+				left_prev = poly_monomial(right_cur->coeff, right_cur->exp);
+				*left = left_prev;
+				left_prev->next = left_cur;
+			}
+			right_cur = right_cur->next;
+		}
 	}
 }
 
-poly* poly_multiplication(poly* left, const poly* right) 
+poly* poly_multiplication(const poly* left, const poly* right) 
 {
-	return left;
+	poly* left_cur = left, *right_cur = right, * r_polys = NULL;
+	poly *result = poly_monomial(0, 0), *addition = poly_monomial(0, 0);
+	int right_polys_count = 0;
+
+	while (right_cur)
+	{
+		++right_polys_count;
+		r_polys = (poly*)realloc(r_polys, sizeof(poly) * (right_polys_count));
+		r_polys[right_polys_count - 1] = *right_cur;
+		right_cur = right_cur->next;
+	}
+
+	while (left_cur)
+	{
+		for (int r = 0; r < right_polys_count; ++r)
+		{
+			addition->coeff = left_cur->coeff * r_polys[r].coeff;
+			addition->exp = left_cur->exp + r_polys[r].exp;
+			poly_addition(&result, addition);
+		}
+		left_cur = left_cur->next;
+	}
+
+	free(addition);
+	free(r_polys);
+	return result;
 }
 
 void poly_free(poly* p)
 {
-	if (p == NULL)
+	poly* temp;
+	while (p)
 	{
-		return;
+		temp = p;
+		p = p->next;
+		free(temp);
 	}
-	if (p->next != NULL)
-	{
-		poly_free(p->next);
-	}
-	free(p);
 }
