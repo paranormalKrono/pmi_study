@@ -7,7 +7,7 @@ typedef struct poly {
 	struct poly* next;
 } poly;
 
-poly* poly_parse(const char* str);
+poly* poly_parse(const char* str, char** errorp);
 poly* poly_monomial(int coeff, int exp);
 void poly_show(const poly* p);
 char* poly_tostring(poly* p);

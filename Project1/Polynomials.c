@@ -12,9 +12,10 @@ typedef enum parse_states
 	stateE
 } parse_states;
 
-poly* poly_parse(const char* str) // +Exception
+poly* poly_parse(const char* str, char** errorp) // +Exception
 {
 	char* cur_str_index = str;
+	*errorp = NULL;
 	poly* p = poly_monomial(0, 0);
 	parse_states cur_state = stateS;
 	bool isNegative = false;
@@ -53,8 +54,8 @@ poly* poly_parse(const char* str) // +Exception
 			case '\0':
 				continue;
 			default:
-				++cur_str_index;
-				break;
+				*errorp = cur_str_index;
+				return p;
 			}
 			break;
 		case stateX:
@@ -118,8 +119,8 @@ char* poly_tostring(const poly* p)
 		{
 			if (cur_poly->exp == 0)
 			{
-				current = (char*)malloc(sizeof(char) * 17);
-				snprintf(current, sizeof(char) * strlen(current), "%d", cur_poly->coeff);
+				current = (char*)malloc(sizeof(char) * (sizeof(int) * 8 + 1));
+				snprintf(current, strlen(current), "%d", cur_poly->coeff);
 			}
 			else if (cur_poly->exp == 1)
 			{
@@ -127,20 +128,20 @@ char* poly_tostring(const poly* p)
 					current = "x";
 				else
 				{
-					current = (char*)malloc(sizeof(char) * 18);
-					snprintf(current, sizeof(char) * strlen(current), "%dx", cur_poly->coeff);
+					current = (char*)malloc(sizeof(char) * (sizeof(int) * 8 + 2));
+					snprintf(current, strlen(current), "%dx", cur_poly->coeff);
 				}
 			}
 			else
 			{
-				current = (char*)malloc(sizeof(char) * 37);
-				snprintf(current, sizeof(char) * strlen(current), "%dx^%d", cur_poly->coeff, cur_poly->exp);
+				current = (char*)malloc(sizeof(char) * (sizeof(int) * 16 + 3));
+				snprintf(current, strlen(current), "%dx^%d", cur_poly->coeff, cur_poly->exp);
 			}
 		}
 		else
 			current = "";
 
-		if (result)
+		if (result && result != "")
 		{
 			new_result = (char*)malloc(sizeof(char) * (strlen(result) + strlen(current) + 3));
 
@@ -151,7 +152,6 @@ char* poly_tostring(const poly* p)
 					snprintf(new_result, strlen(new_result), "%s+%s", result, current);
 			else
 				snprintf(new_result, strlen(new_result), "%s%s", result, current);
-			free(result);
 			result = new_result;
 			new_result = NULL;
 		}
@@ -161,7 +161,7 @@ char* poly_tostring(const poly* p)
 		cur_poly = cur_poly->next;
 	}
 
-	if (result == "") 
+	if (!result || result == "")
 		result = "0";
 	return result;
 
