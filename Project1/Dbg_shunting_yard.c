@@ -5,7 +5,9 @@ void show_queue(queue* q);
 void shunting_yard_dbg()
 {
 	printf("¬ведите строку: \n");
-	char* ic = "10+3-10+gcd(3,9)-10*2+(3-6)";
+	//char* ic = "10+23+gcd(32,24+1)";
+	//char* ic = "10+3-10+gcd(3,9)-10*2+(3-6)";
+	char* ic = "0+modpow(3,3,2)";
 	printf("%s\n", ic);
 	queue* res = get_Reverse_Polish_Notation(ic);
 	show_queue(res);

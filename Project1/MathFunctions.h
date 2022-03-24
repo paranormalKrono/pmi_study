@@ -1,8 +1,8 @@
 #ifndef	_MATHFUNCTIONS_H_
 #define	_MATHFUNCTIONS_H_
-//#include <stdarg.h>
+#include <stdarg.h>
 #include "MathPMI_Term1.h"
-#define FUNCTIONS_COUNT 1
+#define MATH_FUNCTIONS_COUNT 2
 
 typedef struct math_function
 {
@@ -11,7 +11,7 @@ typedef struct math_function
     void* func;
 } math_function;
 
-static math_function math_functs[FUNCTIONS_COUNT] = { "gcd", 2, &euclid };
+static math_function math_functs[MATH_FUNCTIONS_COUNT] = {"gcd", 2, &euclid, "modpow", 3, &modPow};
 
 int get_function_result(math_function mf, int* parameters);
 
