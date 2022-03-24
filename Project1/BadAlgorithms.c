@@ -1,3 +1,50 @@
+
+/*
+char* poly_tostring(const poly* p)
+{
+	char* current, *result = "", str_decimal,* buffer = (char*)malloc(16 * sizeof (char));
+	for (int i = 0; i < 15; ++i, buffer[i] = " ")
+	buffer[15] = '\0';
+	poly* cur_poly = p;
+
+	while (cur_poly)
+	{
+		current = NULL;
+		if (cur_poly->coeff)
+			if (cur_poly->exp == 0)
+				current = _ltoa_s(cur_poly->coeff, buffer, strlen(buffer), 10);
+			else if (cur_poly->exp == 1)
+				if (cur_poly->coeff == 1)
+					current = "x";
+				else
+				{
+					current = _ltoa_s(cur_poly->coeff, buffer, strlen(buffer), 10);
+					strcat_s(current, (strlen(current) + 2) * sizeof(char), "x");
+				}
+			else
+			{
+				current = _ltoa_s(cur_poly->coeff, buffer, strlen(buffer), 10);
+				strcat_s(current, (strlen(current) + 2) * sizeof(char), "x^");
+				str_decimal = _ltoa_s(cur_poly->exp, buffer, strlen(buffer), 10);
+				strcat_s(current, (strlen(current) + strlen(str_decimal) + 2) * sizeof(char), str_decimal);
+			}
+		else
+			current = "0";
+
+		if (cur_poly->coeff)
+			if (cur_poly->coeff > 0)
+				strcat_s(result, (strlen(result) + 1) * sizeof(char), "+");
+			strcat_s(result, (strlen(result) + strlen(current) + 1) * sizeof(char), current);
+
+		cur_poly = cur_poly->next;
+	}
+
+	if (result == "")
+		result = "0";
+	return result;
+
+}
+*/
 /*
 void bigint_subtract_bigint(big_int* b1, const big_int* b2) // big_int 1 и 2 (из b1 вычитается b2)
 {

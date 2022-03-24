@@ -7,12 +7,12 @@ unsigned char* input_chars()
 	unsigned char input_symbol = '0';
 	unsigned int text_length = 0; // длина текста
 
-	// Посимвольное считывание символов
+	// Посимвольное считывание
 	input_symbol = getchar();
 	while (input_symbol != '\n')
 	{
 		input_text[text_length] = input_symbol;
-		text_length += 1;
+		text_length++;
 		input_symbol = getchar();
 		if (!(text_length & STRING_SIZE))
 		{

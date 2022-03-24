@@ -10,7 +10,6 @@ void main()
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
 
-
 	//modPow_recursion_example();
 	//euclid_recursion_example();
 	//extended_euclid_example();
@@ -38,10 +37,11 @@ void main()
 
 	//binarytrees_dbg();
 	
-	poly_dbg();
+	//poly_dbg();
+
+	shunting_yard_dbg();
 
 	//printf("%f", M_PI);
-
 
 	printf("__йнмеж_бшонкмемхъ__");
 	int a = 0;

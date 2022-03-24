@@ -5,6 +5,7 @@
 #include "Big_int.h"
 #include "BinaryTrees.h"
 #include "Polynomials.h"
+#include "Shunting_yard.h"
 #include "MathPMI_Term1.h"
 #include "MathPMI_Term2.h"
 

@@ -95,7 +95,8 @@ poly* poly_parse(const char* str, char** errorp) // +Exception
 poly* poly_monomial(int coeff, int exp) 
 {
 	poly* p = (poly*)malloc(sizeof(poly));
-	if (p) {
+	if (p) 
+	{
 		p->coeff = coeff;
 		p->exp = exp;
 		p->next = NULL;
@@ -119,7 +120,7 @@ char* poly_tostring(const poly* p)
 		{
 			if (cur_poly->exp == 0)
 			{
-				current = (char*)malloc(sizeof(char) * (sizeof(int) * 8 + 1));
+				current = (char*)malloc(sizeof(char) * _MAX_U64TOSTR_BASE10_COUNT);
 				snprintf(current, strlen(current), "%d", cur_poly->coeff);
 			}
 			else if (cur_poly->exp == 1)
@@ -128,13 +129,13 @@ char* poly_tostring(const poly* p)
 					current = "x";
 				else
 				{
-					current = (char*)malloc(sizeof(char) * (sizeof(int) * 8 + 2));
+					current = (char*)malloc(sizeof(char) * (_MAX_U64TOSTR_BASE10_COUNT + 1));
 					snprintf(current, strlen(current), "%dx", cur_poly->coeff);
 				}
 			}
 			else
 			{
-				current = (char*)malloc(sizeof(char) * (sizeof(int) * 16 + 3));
+				current = (char*)malloc(sizeof(char) * (_MAX_U64TOSTR_BASE10_COUNT + 3));
 				snprintf(current, strlen(current), "%dx^%d", cur_poly->coeff, cur_poly->exp);
 			}
 		}
@@ -174,9 +175,9 @@ char* poly_tostring(const poly* p)
 /// <param name="right"></param>
 void poly_addition(const poly** left, const poly* right)
 {
-	if (left == NULL) 
+	if (*left == NULL) 
 	{
-		left = poly_monomial(0, 0);
+		*left = poly_monomial(0, 0);
 	}
 	poly* left_cur = *left, *right_cur = right, *left_prev = NULL;
 
@@ -261,8 +262,11 @@ poly* poly_multiplication(const poly* left, const poly* right)
 		for (int r = 0; r < right_polys_count; ++r)
 		{
 			addition->coeff = left_cur->coeff * r_polys[r].coeff;
-			addition->exp = left_cur->exp + r_polys[r].exp;
-			poly_addition(&result, addition);
+			if (addition->coeff) 
+			{
+				addition->exp = left_cur->exp + r_polys[r].exp;
+				poly_addition(&result, addition);
+			}
 		}
 		left_cur = left_cur->next;
 	}
