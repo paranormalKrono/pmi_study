@@ -12,6 +12,8 @@ typedef enum
 
 unsigned char* input_chars();
 
+void graphs_dbg();
+
 void shunting_yard_dbg();
 
 void poly_dbg();

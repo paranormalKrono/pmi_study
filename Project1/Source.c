@@ -39,7 +39,9 @@ void main()
 	
 	//poly_dbg();
 
-	shunting_yard_dbg();
+	//shunting_yard_dbg();
+
+	graphs_dbg();
 
 	//printf("%f", M_PI);
 
