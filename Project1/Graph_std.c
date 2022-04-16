@@ -18,7 +18,7 @@ graph* graph_read(char* path)
 		{
 			fscanf_s(f, "%d -", &vertex_arc);
 			cur_char = fgetc(f);
-			while (cur_char != '\n' && cur_char != '\0' && cur_char != -1) 
+			while (cur_char != '\n' && cur_char != '\0' && cur_char != -1)
 			{
 				fscanf_s(f, "%d", &vertex_arc);
 				add_arc(g, i, vertex_arc);

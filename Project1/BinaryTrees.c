@@ -84,18 +84,25 @@ binary_tree_stern_brocot* tree_stern_brocot_node(int num, int den)
 	return t;
 }
 
-void tree_show(const binary_tree* tree) 
+void tree_show_sub(const binary_tree* tree)
 {
-	if (tree->left != NULL) 
+	if (tree->left != NULL)
 	{
-		tree_show(tree->left);
+		tree_show_sub(tree->left);
 	}
 	printf("%d ", tree->data);
-	if (tree->right != NULL) 
+	if (tree->right != NULL)
 	{
-		tree_show(tree->right);
+		tree_show_sub(tree->right);
 	}
 }
+
+void tree_show(const binary_tree* tree) 
+{
+	tree_show_sub(tree);
+	printf("\n");
+}
+
 
 void tree_stern_brocot_show(const binary_tree_stern_brocot* tree) 
 {

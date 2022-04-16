@@ -14,3 +14,5 @@ Project1.sdf
 Project1.sln
 .vs/ProjectSettings.json
 .vs/VSWorkspaceState.json
+*.jpg
+*.png

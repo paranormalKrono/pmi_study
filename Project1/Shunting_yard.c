@@ -114,7 +114,7 @@ unsigned char* parse_number(const char** cur_str)
 }
 
 
-int get_RPN_result(const queue* rpn)
+int get_RPN_result(const queue const* rpn)
 {
 	queue* cur_rpn = queue_clone(rpn);
 	stack* numbers_stack = stack_alloc();
@@ -179,8 +179,6 @@ int get_RPN_result(const queue* rpn)
 	}
 
 	stack_free(numbers_stack);
-	token_free(n1);
-	token_free(n2);
 	return cur_number;
 }
 

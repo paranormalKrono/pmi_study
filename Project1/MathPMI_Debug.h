@@ -1,7 +1,9 @@
 #ifndef	_MATHPMI_DEBUG_H_
 #define	_MATHPMI_DEBUG_H_
 #include "MathPMI.h"
+#include <Windows.h>
 #include "Time_Debug.h"
+#include "Menu.h"
 #include "string.h"
 
 typedef enum
@@ -10,6 +12,8 @@ typedef enum
 	iterative
 } algorithm_type;
 
+void print_ints(char* format, int* a, int count);
+int* input_nums(int* count);
 unsigned char* input_chars();
 
 void graphs_dbg();

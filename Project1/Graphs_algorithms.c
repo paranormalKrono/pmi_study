@@ -5,37 +5,45 @@ int* Bipartile_graph_BFS(graph* g)
 {
 	int* parity = (int*)calloc(g->count, sizeof(int)); // 0 - не пройденные, 1 - нечёт, 2 - чёт
 
-	parity[0] = 1;
 
+	node* cur_node;
+	node* front_node;// = (node*)malloc(sizeof(node));
 	queue* front = queue_alloc(); // фронт
-	node* cur_node = g->adj_list[0].head;
-	while (cur_node) 
+	for (int i = 0; i < g->count; ++i) // Смотрим все вершины
 	{
-		parity[cur_node->value] = 2;
-		queue_push(front, cur_node);
-		cur_node = cur_node->next;
-	}
-
-	node* front_node = (node*)malloc(sizeof(node));
-	while (queue_pop(front, &front_node) && front_node) // Вытаскиваем из очереди одну вершину фронта
-	{
-		cur_node = g->adj_list[front_node->value].head;
-		while (cur_node) // Смотрим вершины соединённые с фронтовой
-		{ 
-			if (!parity[cur_node->value]) // Если не прошли
+		if (parity[i]) continue;
+		parity[i] = 1;
+		cur_node = g->adj_list[i].head;
+		while (cur_node) // отправляем связанные вершины во фронт, если не проходили
+		{
+			if (!parity[cur_node->value])
 			{
-				parity[cur_node->value] = parity[front_node->value] == 1 ? 2 : 1;
+				parity[cur_node->value] = 2;
 				queue_push(front, cur_node);
-			}
-			else if (parity[cur_node->value] == parity[front_node->value]) // Если чётности равны, то нашли нечётный цикл
-			{
-				queue_free(front);
-				return parity;
 			}
 			cur_node = cur_node->next;
 		}
-	}
 
+		while (queue_pop(front, &front_node) && front_node) // Вытаскиваем из очереди вершины фронта
+		{
+			cur_node = g->adj_list[front_node->value].head;
+			while (cur_node) // Смотрим вершины соединённые с фронтовой
+			{
+				if (!parity[cur_node->value]) // Если не проходили
+				{
+					parity[cur_node->value] = parity[front_node->value] == 1 ? 2 : 1;
+					queue_push(front, cur_node);
+				}
+				else if (parity[cur_node->value] == parity[front_node->value]) // Если чётности равны, то нашли нечётный цикл
+				{
+					queue_free(front);
+					free(parity);
+					return NULL;
+				}
+				cur_node = cur_node->next;
+			}
+		}
+	}
 	queue_free(front);
 	return parity;
 }
@@ -68,7 +76,7 @@ int* Bipartile_graph_DFS(graph* g)
 				parity[cur_node->value] = cur_main_parity == 1 ? 2 : 1; // Выставляем чётность
 				if (g->adj_list[cur_node->value].head) // Если из неё есть пути
 				{
-					stack_push(path, cur_node); // Добавляем её в путь
+					stack_push(path, cur_node); // Добавляем текущую в путь
 					cur_node = g->adj_list[cur_node->value].head; // Переходим к первой связанной вершине
 					cur_main_parity = cur_main_parity == 1 ? 2 : 1;
 					continue;
@@ -86,40 +94,37 @@ int* Bipartile_graph_DFS(graph* g)
 
 int* Topological_sort_graph(graph* g)
 {
-	int* visit = (int*)malloc(sizeof(int) * g->count); // 0 - не пройденные
-	for (int i = 0; i < g->count; ++i)
-		visit[i] = 0;
+	int* order = (int*)calloc(sizeof(int) * g->count); // 0 - не пройденные
 
-	stack* chain = stack_alloc(); // Цепочка нодов вершин
-	int min = g->count;
-	node* cur_node; // текущий нод
+	int cur_max = g->count-1; // Максимальное доступное значение
+	stack* path = stack_alloc(); // Обратный путь
+	node* cur_node; // Текущий нод вершины
 	for (int i = 0; i < g->count; ++i)
 	{
-		if (visit[i] == 0)
+		if (!order[i]) // Если не посещали эту вершину
 		{
-			visit[i] = 1;
 			cur_node = g->adj_list[i].head;
 
-			while (cur_node)
+			while (cur_node) 
 			{
-				if (!visit[cur_node->value]) // Если не проходили эту вершину
+				if (!order[cur_node->value]) // Если не проходили эту вершину
 				{
-					visit[i] = 1;
-
-					stack_push(chain, &cur_node); // Добавляем нод вершины в цепочку
-					if (g->adj_list[cur_node->value].head)
-						cur_node = g->adj_list[cur_node->value].head;
+					if (g->adj_list[cur_node->value].head) // Если из неё есть пути
+					{
+						stack_push(path, cur_node); // Добавляем текущую в путь
+						cur_node = g->adj_list[cur_node->value].head; // Переходим к первой связанной вершине
+						continue;
+					}
 					else
-						visit[cur_node->value] = min--;
+						order[cur_node->value] = cur_max--;
 				}
-				else if (visit[cur_node->value])
-				while (!cur_node->next && stack_pop(chain, &cur_node)) // Возвращаемся по цепочке, если больше нет путей из основной вершины
-					/*if (visit[)*/
-					visit[cur_node->value];
+				while (!cur_node->next && stack_pop(path, &cur_node)) // Возвращаемся, пока больше нет путей из основной вершины
+					order[cur_node->value] = cur_max--;
 				cur_node = cur_node->next;
 			}
-
+			// Вернулись обратно
+			order[i] = cur_max--;
 		}
 	}
-	return visit;
+	return order;
 }

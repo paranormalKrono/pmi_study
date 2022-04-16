@@ -5,7 +5,7 @@ token* token_alloc()
 {
 	token* t = (token*)malloc(sizeof(token));
 	t->name = NULL;
-	t->type = Unknown;
+	t->type = Unk;
 }
 
 token* token_init(char* name, token_type type) 
