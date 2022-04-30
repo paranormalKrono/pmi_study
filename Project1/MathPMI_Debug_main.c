@@ -3,6 +3,7 @@
 
 void print_ints(char* format, int* a, int count)
 {
+	if (!a) return;
 	for (int i = 0; i < count; ++i)
 		printf(format, a[i]);
 }

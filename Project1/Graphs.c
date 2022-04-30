@@ -28,6 +28,25 @@ graph* graph_init(int vertices_count)
 	return g;
 }
 
+graph* graph_transposition(graph* g) 
+{
+	graph* new_graph = graph_init(g->count);
+
+	node* cur_node;
+	for (int i = 0; i < g->count; ++i) 
+	{
+		cur_node = g->adj_list[i].head;
+		while (cur_node) 
+		{
+			add_arc(new_graph, cur_node->value, i);
+
+			cur_node = cur_node->next;
+		}
+	}
+
+	return new_graph;
+}
+
 void add_arc(graph* g, int first, int second) // Установим указатель на вторую вершину в конец листа вершин, связанных с первой
 {
 	node* cur_node = g->adj_list[first].head;
@@ -112,7 +131,6 @@ void graph_free(graph* g)
 	for (int i = 0; i < g->count; ++i) 
 	{
 		node_free(g->adj_list[i].head);
-		free(g->adj_list[i]);
 	}
 	free(g->adj_list);
 	free(g);
