@@ -49,7 +49,7 @@ int graph_write(graph* g, char* path)
 			cur_node = g->adj_list[i].head;
 			while (cur_node)
 			{
-				fprintf_s(f, " %d", cur_node->value);
+				fprintf_s(f, " %d", cur_node->vertex);
 				cur_node = cur_node->next;
 			}
 			fprintf(f, "\n");

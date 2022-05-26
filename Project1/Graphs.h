@@ -14,7 +14,7 @@ typedef struct list
 
 typedef struct node
 {
-	int value;
+	int vertex;
 	struct node* next;
 } node;
 
@@ -23,6 +23,7 @@ graph* graph_alloc();
 graph* graph_init(int n);
 graph* graph_transposition(graph* g);
 node* node_init(int value, node* next);
+void node_free(node* n);
 void add_arc(graph* g, int first, int second);
 void del_arc(graph* g, int first, int second);
 void add_edge(graph* g, int first, int second);

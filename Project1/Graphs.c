@@ -12,7 +12,7 @@ node* node_init(int value, node* next)
 {
 	node* n = (node*)malloc(sizeof(node));
 	n->next = NULL;
-	n->value = value;
+	n->vertex = value;
 }
 
 graph* graph_init(int vertices_count)
@@ -38,7 +38,7 @@ graph* graph_transposition(graph* g)
 		cur_node = g->adj_list[i].head;
 		while (cur_node) 
 		{
-			add_arc(new_graph, cur_node->value, i);
+			add_arc(new_graph, cur_node->vertex, i);
 
 			cur_node = cur_node->next;
 		}
@@ -52,10 +52,12 @@ void add_arc(graph* g, int first, int second) // ”становим указатель на вторую в
 	node* cur_node = g->adj_list[first].head;
 	if (cur_node) 
 	{
-		while (cur_node->next) {
-			if (cur_node->value == second) return;
+		while (cur_node->next) 
+		{
+			if (cur_node->vertex == second) return;
 			cur_node = cur_node->next;
 		}
+		if (cur_node->vertex == second) return;
 		cur_node->next = node_init(second, NULL);
 	}
 	else {
@@ -77,7 +79,7 @@ void del_arc(graph* g, int first, int second)
 	// ѕровер€ем основную вершину списка и убираем, если значение совпало
 	node* cur_node = g->adj_list[first].head;
 	if (cur_node) {
-		if (cur_node->value == second)
+		if (cur_node->vertex == second)
 		{
 			g->adj_list[first].head = cur_node->next;
 			free(cur_node);
@@ -87,7 +89,7 @@ void del_arc(graph* g, int first, int second)
 		while (cur_node->next)
 		{
 			// ”бираем нод, если его значение совпало
-			if (cur_node->next->value == second)
+			if (cur_node->next->vertex == second)
 			{
 				node* n = cur_node->next;
 				cur_node->next = n->next;
@@ -99,7 +101,8 @@ void del_arc(graph* g, int first, int second)
 	}
 }
 
-void del_edge(graph* g, int first, int second) {
+void del_edge(graph* g, int first, int second) 
+{
 	del_arc(g, first, second);
 	del_arc(g, second, first);
 }
@@ -113,7 +116,7 @@ void graph_print(graph* g)
 		cur_node = g->adj_list[i].head;
 		while (cur_node)
 		{
-			printf(" %d", cur_node->value);
+			printf(" %d", cur_node->vertex);
 			cur_node = cur_node->next;
 		}
 		printf("\n");
@@ -130,7 +133,10 @@ void graph_free(graph* g)
 {
 	for (int i = 0; i < g->count; ++i) 
 	{
-		node_free(g->adj_list[i].head);
+		if (g->adj_list[i].head) 
+		{
+			node_free(g->adj_list[i].head);
+		}
 	}
 	free(g->adj_list);
 	free(g);

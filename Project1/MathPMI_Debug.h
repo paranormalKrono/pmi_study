@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include "Time_Debug.h"
 #include "Menu.h"
+#include "Main.h"
 #include "string.h"
 
 typedef enum
@@ -11,6 +12,7 @@ typedef enum
 	recursive,
 	iterative
 } algorithm_type;
+
 
 void print_ints(char* format, int* a, int count);
 int* input_nums(int* count);

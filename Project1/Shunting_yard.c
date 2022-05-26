@@ -4,11 +4,12 @@
 #include "Shunting_yard.h"
 #include "Tokens.h"
 #include "MathFunctions.h"
+#include "Main.h"
+
 #define NUMBER_SIZE 10
 
 int get_operation_priority(const char op);
 char* parse_number(const char** cur_str);
-char* parse_function(const char** cur_function, const char* cur_str);
 
 queue* get_Reverse_Polish_Notation(char* str)
 {
@@ -25,12 +26,12 @@ queue* get_Reverse_Polish_Notation(char* str)
 		switch (*cur_str_index)
 		{
 		case '(':
-			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_function(&cur_ft_start_index, cur_str_index), Function));
+			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_from_to(&cur_ft_start_index, cur_str_index), Function));
 			stack_push(tokens_stack, token_init("(", LPar));
 			break;
 
 		case ')': case ',': // Выталкиваем все операции до ( или ,
-			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_function(&cur_ft_start_index, cur_str_index), Function));
+			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_from_to(&cur_ft_start_index, cur_str_index), Function));
 			token_temp = token_alloc();
 			while (stack_pop(tokens_stack, &token_temp)
 			&&(token_temp->type != LPar && token_temp->type != Comma))
@@ -43,7 +44,7 @@ queue* get_Reverse_Polish_Notation(char* str)
 			break;
 
 		case '*': case '/': case '+': case '-': // Выталкиваем операции большего приоритета и добавляем в стек текущую
-			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_function(&cur_ft_start_index, cur_str_index), Function));
+			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_from_to(&cur_ft_start_index, cur_str_index), Function));
 			while ((token_void = stack_get_front(tokens_stack), token_void)
 				&& get_operation_priority((*token_void)->name[0]) >= get_operation_priority(*cur_str_index))
 				if (token_temp = token_alloc(), stack_pop(tokens_stack, &token_temp))
@@ -58,7 +59,7 @@ queue* get_Reverse_Polish_Notation(char* str)
 			break;
 
 		case '0': case '1': case '2': case '3': case  '4': case  '5': case  '6': case  '7': case '8': case  '9': // Разбираем число
-			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_function(&cur_ft_start_index, cur_str_index), Function));
+			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_from_to(&cur_ft_start_index, cur_str_index), Function));
 			queue_push(result_queue, token_init(parse_number(&cur_str_index), Number));
 			cur_str_index--;
 			break;
@@ -78,16 +79,6 @@ queue* get_Reverse_Polish_Notation(char* str)
 
 	stack_free(tokens_stack);
 	return result_queue;
-}
-
-char* parse_function(const char** cur_function, const char* cur_str) 
-{
-	char *result = (char*)malloc((cur_str - *cur_function + 1) * sizeof(char));
-	int i = 0;
-	for (; *cur_function != cur_str; ++i, ++*cur_function) result[i] = **cur_function;
-	result[i] = '\0';
-
-	return result;
 }
 
 unsigned char* parse_number(const char** cur_str)

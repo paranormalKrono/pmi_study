@@ -168,11 +168,7 @@ char* poly_tostring(const poly* p)
 
 }
 
-/// <summary>
-/// Poly in exp-increasing order
-/// </summary>
-/// <param name="left"></param>
-/// <param name="right"></param>
+// Poly in exp-increasing order
 void poly_addition(const poly** left, const poly* right)
 {
 	if (*left == NULL) 

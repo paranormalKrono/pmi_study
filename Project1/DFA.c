@@ -1,23 +1,172 @@
 #include "DFA.h"
+#include <stdio.h>
 
-bool dfa_check_binary_sum(const char* x, const char* y, const char* z, const int count) 
+dfa* dfa_alloc()
 {
-	int c = 0;
-	for (int i = 0; i < count; ++i)
-	{
-		c += x[i] + y[i] - ('0' * 2);
-		switch (c) 
-		{
-		case 1:
-			if (z[i] != 1) 
-			{
-				return false;
-			}
-			break;
-		case 2:
+	dfa* d = (dfa*)malloc(sizeof(dfa));
 
-		default:
-			break;
+	if (!d) return NULL;
+
+	d->count = 0;
+	d->adj_states = NULL;
+
+	return d;
+}
+
+
+dnode* dnode_init(int value, int vertex, dnode* next)
+{
+	dnode* n = (dnode*)malloc(sizeof(dnode));
+	if (!n) return NULL;
+
+	n->value = value;
+	n->vertex = vertex;
+	n->next = next;
+}
+
+// Количество состояний с учётом 1 штопорной вершины; Если вершин 0, то вернёт alloc
+dfa* dfa_init(int states_count)
+{
+	if (states_count == 0) return dfa_alloc();
+	dfa* d = (dfa*)malloc(sizeof(dfa));
+
+	if (!d) return NULL;
+
+	d->count = states_count;
+	d->adj_states = (dstate*)malloc(states_count * sizeof(dstate));
+	if (!d->adj_states) 
+	{
+		free(d);
+		return NULL;
+	}
+
+	dnode* n;
+	for (int i = 0; i < states_count; ++i)
+	{
+		d->adj_states[i].state = state_unknown;
+		d->adj_states[i].head = NULL;
+	}
+	dfa_add_arcs(d, DFA_CORKSCREW_VERTEX, DFA_CORKSCREW_VERTEX, 0); // Для штопора
+
+	return d;
+}
+
+dfa* dfa_copy(dfa* d) 
+{
+	dfa* dc = dfa_init(d->count);
+	dnode* cur_node;
+	for (int i = 0; i < d->count; ++i)
+	{
+		cur_node = dc->adj_states[i].head;
+		while (cur_node)
+		{
+			dfa_add_arc(dc, i, cur_node->vertex, cur_node->value);
+			cur_node = cur_node->next;
+		}
+	}
+	return dc;
+}
+
+void dfa_free(dfa* d)
+{
+	for (int i = 0; i < d->count; ++i)
+	{
+		if (d->adj_states[i].head)
+		{
+			dnode_free(d->adj_states[i].head);
+		}
+	}
+	free(d->adj_states);
+	free(d);
+}
+
+// со штопором
+void dfa_add_arcs(dfa* d, int first, int second, int value) 
+{
+	if (!value)
+		d->adj_states[first].head = dnode_init(0, second, dnode_init(1, 0, NULL)); // first -> second & штопор
+	else
+		d->adj_states[first].head = dnode_init(0, 0, dnode_init(1, second, NULL)); // first -> штопор & second
+}
+
+void dfa_del_arcs(dfa* d, int first) 
+{
+	dnode_free(d->adj_states[first].head); // Удаляем путь из first в second и путь в штопор
+	d->adj_states[first].head = NULL;
+}
+
+// в d из first в second по value = 0 | 1
+void dfa_add_arc(dfa* d, int first, int second, int value)
+{
+	dnode* cur_node = d->adj_states[first].head;
+	if (cur_node)
+	{
+		while (cur_node->next)
+		{
+			if (cur_node->value == value) return;
+			cur_node = cur_node->next;
+		}
+		if (cur_node->value == value) return;
+		cur_node->next = dnode_init(value, second, NULL);
+	}
+	else 
+	{
+		d->adj_states[first].head = dnode_init(value, second, NULL);
+	}
+}
+
+void dfa_del_arc(dfa* d, int first, int second, int value)
+{
+	// Проверяем существуют ли эти вершины
+	if (first > d->count || second > d->count)
+		return;
+
+	// Проверяем основную вершину списка и убираем, если значение совпало
+	dnode* cur_node = d->adj_states[first].head;
+	if (cur_node) 
+	{
+		if (cur_node->vertex == second && cur_node->value == value)
+		{
+			d->adj_states[first].head = cur_node->next;
+			free(cur_node);
+			return;
+		}
+
+		while (cur_node->next)
+		{
+			// Убираем нод, если его значение совпало
+			if (cur_node->next->vertex == second && cur_node->value == value)
+			{
+				dnode* n = cur_node->next;
+				cur_node->next = n->next;
+				free(n);
+				return;
+			}
+			cur_node = cur_node->next;
 		}
 	}
 }
+
+void dfa_print(dfa* g)
+{
+	printf_s("%d\n", g->count);
+	dnode* cur_node;
+	for (int i = 0; i < g->count; ++i)
+	{
+		printf_s("%d -", i);
+		cur_node = g->adj_states[i].head;
+		while (cur_node)
+		{
+			printf_s(" %d|%d", cur_node->vertex, cur_node->value);
+			cur_node = cur_node->next;
+		}
+		printf_s("\n");
+	}
+}
+
+void dnode_free(dnode* n)
+{
+	if (n->next) dnode_free(n->next);
+	free(n);
+}
+
