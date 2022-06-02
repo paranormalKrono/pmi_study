@@ -15,7 +15,7 @@ void graphs_dbg()
 	printf_s("__GRAPHS_DEBUG__\n");
 	
 	const int text_count = 8;
-	const char* Text[8] = {
+	const char* Text[] = {
 		"Конечные автоматы",
 		"Проверка формулы 2-sat",
 		"Конденсация графа",
@@ -25,6 +25,15 @@ void graphs_dbg()
 		"Топологическая сортировка",
 		"Ничего"
 	};
+	const void (*methods[])() = {
+		dfa_dbg,
+		sat2,
+		condensation,
+		condensation_transposition,
+		bipartile_bfs,
+		bipartile_dfs,
+		topological_sort
+	};
 	const int nothing_choice = text_count - 1;
 
 	int choice = 0;
@@ -32,33 +41,7 @@ void graphs_dbg()
 	{
 		printf_s("Выберите, что нужно сделать: ");
 		choice = choice_menu_h(Text, text_count);
-
-		switch (choice)
-		{
-		case 0:
-			dfa_dbg();
-			break;
-		case 1:
-			sat2();
-			break;
-		case 2:
-			condensation();
-			break;
-		case 3:
-			condensation_transposition();
-			break;
-		case 4:
-			bipartile_bfs();
-			break;
-		case 5:
-			bipartile_dfs();
-			break;
-		case 6:
-			topological_sort();
-			break;
-		default:
-			break;
-		}
+		methods[choice]();
 	}
 
 	//print_graph();
@@ -70,60 +53,83 @@ void print_graph_property(int* print_vertexes_property(graph*), graph* g);
 graph* get_graph();
 void write_graph(const graph* g);
 
+dfa* example_dfa1();
+dfa* example_dfa2();
+void dfa_print_properties(dfa* d, int x, int x_range, int x_range2);
 void dfa_dbg()
 {
-	int x = 10;
+	
+	int x = 5;
 	printf_s("Автомат проверяющий число %d\n", x);
 	dfa* d = dfa_int(x);
-	dfa_print(d);
-	printf_s("\n");
-	int result = dfa_check_int(d, x);
-	printf_s("Результат проверки %d - %d\n\n", x, result);
-	printf_s("Числа, которые может проверить этот автомат:\n");
-	x = 20;
-	dfa_print_range(d, x);
+	dfa_print_properties(d, 5, 10, 10);
+
+	dfa* d1 = example_dfa1();
+	printf_s("\nАвтомат проверяющий {01, 10}*\n");
+	dfa_print_properties(d1, 6, 15, 15);
+
+	dfa* d2 = example_dfa2();
+	printf_s("\nАвтомат проверяющий {1 << n}*\n");
+	dfa_print_properties(d2, 8, 15, 15);
+
+
+	printf_s("\nАвтомат проверяющий {1 << n}* и {01, 10}*\n");
+	dfa* d1_u_d2 = dfa_union(d1, d2);
+	dfa_print_properties(d1_u_d2, 10, 15, 15);
+
+
+	char* str = "(a^b)|c";
+	vvariable vars [3] = {{"a", d1}, {"b", d2}, {"c", d}};
+	dfa* d3 = dfa_get_str_result(str, vars, 3);
+	dfa_print_properties(d3, 8, 15, 15);
+
 	free(d);
-
-	// {01, 10}*
-	printf_s("Автомат проверяющий {01, 10}*\n");
-	dfa* d1 = dfa_init(4);
-	dfa_add_arc(d1, DFA_START_VERTEX, 2, 1);
-	dfa_add_arc(d1, DFA_START_VERTEX, 3, 0);
-	dfa_add_arcs(d1, 2, DFA_START_VERTEX, 0);
-	dfa_add_arcs(d1, 3, DFA_START_VERTEX, 1);
-	d1->adj_states[DFA_START_VERTEX].state = state_end;
-
-	dfa_print(d1);
+	dfa_free(d1);
+	dfa_free(d2);
+	//dfa_free(d1_u_d2);
+	dfa_free(d3);
 	printf_s("\n");
+}
 
-	x = 100;
-	result = dfa_check_int(d1, x);
-	printf_s("Результат проверки %d - %d\n", x, result);
-	printf_s("Числа, которые может проверить этот автомат:\n");
-	dfa_print_range(d1, x);
+// {01, 10}*
+dfa* example_dfa1() 
+{
+	dfa* d1 = dfa_init(4);
+	dfa_add_arc(d1, 1, 2, 1);
+	dfa_add_arc(d1, 1, 3, 0);
+	dfa_add_arcs(d1, 2, 1, 0);
+	dfa_add_arcs(d1, 3, 1, 1);
+	d1->adj_states[1].state = state_end;
+	return d1;
+}
 
-	// 1 << n
-	printf_s("Автомат проверяющий {1 << n}*\n");
+// 1 << n
+dfa* example_dfa2()
+{
 	dfa* d2 = dfa_init(3);
-	dfa_add_arcs(d2, DFA_START_VERTEX, 2, 1);
+	dfa_add_arcs(d2, 1, 2, 1);
 	dfa_add_arc(d2, 2, 2, 0);
 	dfa_add_arc(d2, 2, DFA_CORKSCREW_VERTEX, 1);
 	d2->adj_states[2].state = state_end;
-
-	printf_s("\n");
-	dfa_print(d2);
- 
-	x = 32768;
-	result = dfa_check_int(d2, x);
-	printf_s("Результат проверки %d - %d\n", x, result);
-	printf_s("Числа, которые может проверить этот автомат:\n");
-	dfa_print_range(d2, x);
-
-	dfa_free(d1);
-	dfa_free(d2);
-
-	printf_s("\n");
+	return d2;
 }
+
+void dfa_print_properties(dfa* d, int x, int x_range, int x_range2) 
+{
+	dfa_print(d);
+
+	printf_s("Результат проверки %d - %d\n", x, dfa_check_int(d, x));
+	printf_s("Числа, которые может проверить этот автомат до %d:\n\n", x_range);
+	dfa_print_range(d, x_range);
+
+	dfa* d_ = dfa_implement(d);
+	printf_s("Обратный автомат\n");
+	dfa_print(d_);
+	printf_s("Числа, которые может проверить обратный автомат до %d:\n\n", x_range2);
+	dfa_print_range(d_, x_range2);
+	free(d_);
+}
+
 
 void sat2() 
 {

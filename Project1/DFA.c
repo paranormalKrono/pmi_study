@@ -32,6 +32,7 @@ dfa* dfa_init(int states_count)
 
 	if (!d) return NULL;
 
+	d->init_state = 1;
 	d->count = states_count;
 	d->adj_states = (dstate*)malloc(states_count * sizeof(dstate));
 	if (!d->adj_states) 
@@ -57,7 +58,7 @@ dfa* dfa_copy(dfa* d)
 	dnode* cur_node;
 	for (int i = 0; i < d->count; ++i)
 	{
-		cur_node = dc->adj_states[i].head;
+		cur_node = d->adj_states[i].head;
 		while (cur_node)
 		{
 			dfa_add_arc(dc, i, cur_node->vertex, cur_node->value);
@@ -83,10 +84,18 @@ void dfa_free(dfa* d)
 // со штопором
 void dfa_add_arcs(dfa* d, int first, int second, int value) 
 {
-	if (!value)
-		d->adj_states[first].head = dnode_init(0, second, dnode_init(1, 0, NULL)); // first -> second & штопор
+	if (value) 
+	{
+		// first -> штопор & second
+		dfa_add_arc(d, first, DFA_CORKSCREW_VERTEX, 0);
+		dfa_add_arc(d, first, second, 1);
+	}
 	else
-		d->adj_states[first].head = dnode_init(0, 0, dnode_init(1, second, NULL)); // first -> штопор & second
+	{
+		// first -> second & штопор
+		dfa_add_arc(d, first, second, 0);
+		dfa_add_arc(d, first, DFA_CORKSCREW_VERTEX, 1);
+	}
 }
 
 void dfa_del_arcs(dfa* d, int first) 
@@ -104,10 +113,14 @@ void dfa_add_arc(dfa* d, int first, int second, int value)
 		while (cur_node->next)
 		{
 			if (cur_node->value == value) return;
+			if (cur_node->next->value > value) 
+				cur_node->next = dnode_init(value, second, cur_node->next);
 			cur_node = cur_node->next;
 		}
 		if (cur_node->value == value) return;
-		cur_node->next = dnode_init(value, second, NULL);
+		if (cur_node->value > value)
+			d->adj_states[first].head = dnode_init(value, second, cur_node);
+		else cur_node->next = dnode_init(value, second, NULL);
 	}
 	else 
 	{
@@ -149,11 +162,12 @@ void dfa_del_arc(dfa* d, int first, int second, int value)
 
 void dfa_print(dfa* g)
 {
-	printf_s("%d\n", g->count);
+	printf_s(" %d\n", g->count);
 	dnode* cur_node;
+	
 	for (int i = 0; i < g->count; ++i)
 	{
-		printf_s("%d -", i);
+		printf_s("[%2d] %8s -", i, g->adj_states[i].state == state_end ? "end" : "unknown");
 		cur_node = g->adj_states[i].head;
 		while (cur_node)
 		{

@@ -36,27 +36,16 @@ void menu()
 			"Big int",
 			"..."
 		};
+		const void (*methods[])() = {
+			graphs_dbg,
+			binarytrees_dbg,
+			shunting_yard_dbg,
+			poly_dbg,
+			bigint_dbg
+		};
+		int choice = choice_menu(h, cci, start_menu_texts, start_menu_sections_count);
+		methods[choice]();
 
-		switch (choice_menu(h, cci, start_menu_texts, start_menu_sections_count))
-		{
-		case 0:
-			graphs_dbg();
-			break;
-		case 1:
-			binarytrees_dbg();
-			break;
-		case 2:
-			shunting_yard_dbg();
-			break;
-		case 3:
-			poly_dbg();
-			break;
-		case 4:
-			bigint_dbg();
-			break;
-		case 5:
-			break;
-		}
 		printf_s("%s", "Вы хотите продолжить? Да/...\n");
 		answer = input_chars();
 	} while (!strcmp(answer, "Да"));

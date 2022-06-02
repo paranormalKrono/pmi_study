@@ -5,14 +5,14 @@ int get_mathfunction_index(char* name)
 {
 	for (int i = 0; i < MATH_FUNCTIONS_COUNT; ++i)
 	{
-		if (strcmp(name, math_functs[i].name) == 0) return i;
+		if (strcmp(name, math_fns[i].name) == 0) return i;
 	}
 	return -1;
 }
 
-int get_function_result(math_function mf, int* parameters)
+void* get_function_result(math_function mf, void** parameters)
 {
-	int (*mff)(int*) = mf.func;
+	void* (*mff)(void*) = mf.fn;
 	switch (mf.parameters_count)
 	{
 	case 1:
@@ -26,4 +26,21 @@ int get_function_result(math_function mf, int* parameters)
 	default:
 		break;
 	}
+}
+
+float plus(float a, float b)
+{
+	return a + b;
+}
+float minus(float a, float b)
+{
+	return a - b;
+}
+float division(float a, float b)
+{
+	return a / b;
+}
+float multiplication(float a, float b)
+{
+	return a * b;
 }

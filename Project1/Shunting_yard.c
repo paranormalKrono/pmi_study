@@ -4,6 +4,7 @@
 #include "Shunting_yard.h"
 #include "Tokens.h"
 #include "MathFunctions.h"
+#include "Variables_void.h"
 #include "Main.h"
 
 #define NUMBER_SIZE 10
@@ -13,9 +14,9 @@ char* parse_number(const char** cur_str);
 
 queue* get_Reverse_Polish_Notation(char* str)
 {
-	char* cur_str_index = str, *cur_ft_start_index = str;
+	char* cur_str_index = str, *st_start_index = str;
 	char* s_temp;
-	bool isFt = false;
+	bool isSt = false;
 	token* token_temp, ** token_void;
 
 	queue* result_queue = queue_alloc();
@@ -26,12 +27,12 @@ queue* get_Reverse_Polish_Notation(char* str)
 		switch (*cur_str_index)
 		{
 		case '(':
-			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_from_to(&cur_ft_start_index, cur_str_index), Function));
+			if (isSt) isSt = false, stack_push(tokens_stack, token_init(parse_from_to(&st_start_index, cur_str_index), Function));
 			stack_push(tokens_stack, token_init("(", LPar));
 			break;
 
 		case ')': case ',': // Выталкиваем все операции до ( или ,
-			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_from_to(&cur_ft_start_index, cur_str_index), Function));
+			if (isSt) isSt = false, stack_push(tokens_stack, token_init(parse_from_to(&st_start_index, cur_str_index), Variable));
 			token_temp = token_alloc();
 			while (stack_pop(tokens_stack, &token_temp)
 			&&(token_temp->type != LPar && token_temp->type != Comma))
@@ -43,8 +44,8 @@ queue* get_Reverse_Polish_Notation(char* str)
 			if (*cur_str_index == ',') 	stack_push(tokens_stack, token_init(",", LPar));
 			break;
 
-		case '*': case '/': case '+': case '-': // Выталкиваем операции большего приоритета и добавляем в стек текущую
-			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_from_to(&cur_ft_start_index, cur_str_index), Function));
+		case '*': case '/': case '+': case '-': case '^': case '|': case '!': case '\\': // Выталкиваем операции большего приоритета и добавляем в стек текущую
+			if (isSt) isSt = false, stack_push(tokens_stack, token_init(parse_from_to(&st_start_index, cur_str_index), Variable));
 			while ((token_void = stack_get_front(tokens_stack), token_void)
 				&& get_operation_priority((*token_void)->name[0]) >= get_operation_priority(*cur_str_index))
 				if (token_temp = token_alloc(), stack_pop(tokens_stack, &token_temp))
@@ -59,19 +60,20 @@ queue* get_Reverse_Polish_Notation(char* str)
 			break;
 
 		case '0': case '1': case '2': case '3': case  '4': case  '5': case  '6': case  '7': case '8': case  '9': // Разбираем число
-			if (isFt) isFt = false, stack_push(tokens_stack, token_init(parse_from_to(&cur_ft_start_index, cur_str_index), Function));
+			if (isSt) isSt = false, stack_push(tokens_stack, token_init(parse_from_to(&st_start_index, cur_str_index), Variable));
 			queue_push(result_queue, token_init(parse_number(&cur_str_index), Number));
 			cur_str_index--;
 			break;
 		case ' ':
 			break;
 		default:
-			if (!isFt) cur_ft_start_index = cur_str_index;
-			isFt = true;
+			if (!isSt) st_start_index = cur_str_index;
+			isSt = true;
 			break;
 		}
 		cur_str_index++;
 	}
+	if (isSt) isSt = false, stack_push(tokens_stack, token_init(parse_from_to(&st_start_index, cur_str_index), Variable));
 
 	// Выталкиваем операции из стека
 	while (stack_pop(tokens_stack, &token_temp))
@@ -105,41 +107,37 @@ unsigned char* parse_number(const char** cur_str)
 }
 
 
-int get_RPN_result(const queue const* rpn)
+int get_vv_index(char* s, vvariable* variables, int count)
+{
+	for (int i = 0; i < count; ++i)
+		if (strcmp(s, variables[i].name)) return i;
+	return -1;
+}
+
+void* get_RPN_result(const queue const* rpn, const vvariable* vars, int count)
 {
 	queue* cur_rpn = queue_clone(rpn);
-	stack* numbers_stack = stack_alloc();
+	stack* variables_stack = stack_alloc();
 	token* cur_token, *n1 = token_alloc(), *n2 = token_alloc();
+	vvariable* v;
 	math_function mf;
-	char* buffer;
-	int cur_number = 0, mf_index;
-	int* parameters;
+	void* cur_res = malloc(sizeof(void*));
+	int mf_index;
+	void** parameters;
 
 	while (queue_pop(cur_rpn, &cur_token) && cur_token) 
 	{
 		switch (cur_token->type)
 		{
-		case Operator: // Забираем 2 числа из стека, проводим операцию и отправляем результат обратно в стек
-			stack_pop(numbers_stack, &n1);
-			stack_pop(numbers_stack, &n2);
-			cur_number = atoi(n2->name);
-			switch (cur_token->name[0])
-			{
-			case '-':
-				cur_number -= atoi(n1->name); break;
-			case '+':
-				cur_number += atoi(n1->name); break;
-			case '*':
-				cur_number *= atoi(n1->name); break;
-			case '/':
-				cur_number /= atoi(n1->name); break;
-			default:
-				break;
-			}
-			
-			buffer = (char*)malloc(sizeof(char) * _MAX_U64TOSTR_BASE10_COUNT);
-			_itoa_s(cur_number, buffer, _MAX_U64TOSTR_BASE10_COUNT, 10);
-			stack_push(numbers_stack, token_init(buffer, Number));
+		case Number:
+		{
+			int num = atoi(cur_token->name);
+			stack_push(variables_stack, vvariable_init(cur_token->name, &num));
+			break;
+		}
+
+		case Variable:
+			stack_push(variables_stack, vars[get_vv_index(cur_token->name, vars, count)].value);
 			break;
 
 		case Function:  // Получаем данные функции, забираем из стека нужное число параметров и 
@@ -147,36 +145,41 @@ int get_RPN_result(const queue const* rpn)
 			mf_index = get_mathfunction_index(cur_token->name);
 			if (mf_index != -1) 
 			{
-				mf = math_functs[mf_index];
+				mf = math_fns[mf_index];
 
-				parameters = (int*)malloc(mf.parameters_count * sizeof(int));
+				parameters = (void**)malloc(mf.parameters_count * sizeof(void*));
 				for (int i = mf.parameters_count - 1; i >= 0; --i)
 				{
-					stack_pop(numbers_stack, &n1);
-					parameters[i] = atoi(n1->name);
+					stack_pop(variables_stack, &v);
+					parameters[i] = v;
 				}
-				cur_number = get_function_result(mf, parameters);
+				cur_res = get_function_result(mf, parameters);
 				free(parameters);
 
-				buffer = (char*)malloc(sizeof(char) * _MAX_U64TOSTR_BASE10_COUNT);
-				_itoa_s(cur_number, buffer, _MAX_U64TOSTR_BASE10_COUNT, 10);
-				stack_push(numbers_stack, token_init(buffer, Number));
+				stack_push(variables_stack, vvariable_init(NULL, cur_res));
 			}
 			break;
 		default:
-			stack_push(numbers_stack, cur_token);
+			stack_push(variables_stack, cur_token);
 			break;
 		}
 	}
 
-	stack_free(numbers_stack);
-	return cur_number;
+	stack_free(variables_stack);
+	if (!cur_res) return NULL;
+	return cur_res;
 }
 
 int get_operation_priority(const char op) 
 {
 	switch (op)
 	{
+	case '!':
+		return 5;
+	case '^':
+		return 4;
+	case '|': case '\\':
+		return 3;
 	case '*': case '/':
 		return 2;
 	case '-': case '+':

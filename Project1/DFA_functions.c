@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Lessons/sq/stack_list.h"
 
 char* get_binary(const int x);
 
@@ -17,11 +18,12 @@ dfa* dfa_int(int number)
 	// Дополнительные дуги для обработки предшествующих нулей
 	dfa_add_arc(d, DFA_START_VERTEX, DFA_START_VERTEX, 0);
 	dfa_add_arcs(d, DFA_START_VERTEX, DFA_START_VERTEX + 1, (int)*(cur_digit++) - '0');
-	int i = DFA_START_VERTEX + 1; 
+	int i = DFA_START_VERTEX + 1;
 	for (; *cur_digit != '\0'; ++i, ++cur_digit)
 	{
 		dfa_add_arcs(d, i, i + 1, (int)*cur_digit - '0'); // i -> i + 1 по текущей цифре 0 или 1 и в штопор
 	}
+	dfa_add_arcs(d, i, 0, 0); // 
 
 	d->adj_states[i].state = state_end;
 	
@@ -31,16 +33,17 @@ dfa* dfa_int(int number)
 int dfa_check_int(dfa* d, const int n) 
 {
 	char* number_r2 = get_binary(n);
-	return dfa_check(d, number_r2);
+	int result = dfa_check(d, number_r2);
+	free(number_r2);
+	return result;
 }
 
-// проверит 101, но также проверит {0}*101
+// проверит 101, но не 0101
 int dfa_check(dfa* d, const char* str) 
 {
 	char* cur_str = str;
-	while (cur_str == '0') ++cur_str;
 
-	dnode* cur_node = d->adj_states[1].head;
+	dnode* cur_node = d->adj_states[d->init_state].head;
 	int head_vertex = 0;
 	int value; // двоичный бит числа
 	while (cur_node)
@@ -60,68 +63,77 @@ int dfa_check(dfa* d, const char* str)
 	return 0;
 }
 
-void int_add_if_not_contains(int x, int** ints, int* count);
-int sort(int* a, int n);
+void str_add_if_not_contain(char* x, char*** strs, int* count);
+int sort_binary_strs(char** a, int n);
 
-// вывести все числа от 0 до number
+void dfa_print_range2(dfa* d, int number)
+{
+	for (int i = 0; i < number; ++i) 
+	{
+		if (dfa_check_int(d, i)) 
+		{
+			printf_s("%d\n", i);
+		}
+	}
+}
+
+// Вывести все строки, которые может распознать автомат от 0 до number
 void dfa_print_range(dfa* d, int number)
 {
-	char* number_r2 = get_binary(number); 
-	//printf_s("number_r2 = %s\n", number_r2);
+	char* number_r2 = get_binary(number);
+	const int len = strlen(number_r2) + 1;
+	free(number_r2);
 
-	dnode* cur_node;
-	int res = 0, prev_res = -1, steps = 0, new_step = INT_MAX; // результаты, шаги переключения
-	int* results = (int*)malloc(sizeof(int));
-	int res_count = 0;
+	dnode* cur_node = d->adj_states[d->init_state].head;
+	int res = 0, res_count = 0;
+	
+	char* res_str;
+	char** results = (char**)malloc(sizeof(char*));
+	char* res_binary = (char*)malloc(sizeof(char)*len);
+	char* cur_bin_pos = res_binary;
 
-	while (res != prev_res) // Значит другого числа от автомата получить нельзя
+	stack* path = stack_alloc(); // Обратный путь
+	while (cur_node) 
 	{
-		//printf_s("result node new_step step = %d\n", steps);
-		prev_res = res;
-		cur_node = d->adj_states[DFA_START_VERTEX].head;
-		res = 0;
-		for (int i = 0; cur_node; ++i)
+		if (cur_node->value + (res << 1) <= number && cur_bin_pos - res_binary < len) // если результат меньше предельного, проходим по ребру, иначе меняем ребро
 		{
-			if (cur_node->vertex == DFA_CORKSCREW_VERTEX) // Если текущий путь ведёт в штопор, меняем ребро
-			{
-				cur_node = cur_node->next;
-				if (!cur_node) break;
-			}
-			else if (cur_node->next && cur_node->next->vertex != DFA_CORKSCREW_VERTEX) // Если присутствует выбор между 0 и 1
-			{
-				if (!(steps & (1 << i))) // Если это не шаг переключения, выбираем меньшее ребро и запоминаем возможную точку переключения
-				{
-					if (cur_node->value > cur_node->next->value)
-						cur_node = cur_node->next;
-					new_step = i;
-				}
-			}
-
+			*cur_bin_pos = (char)(cur_node->value + '0');
+			++cur_bin_pos;
 			res = cur_node->value + (res << 1); // прибавляем стоимость ребра и переходим
-			//printf_s("%6d %2d|%d %8d\n", res, cur_node->vertex, cur_node->value, new_step);
-
-			if (res > number) break; // Вышли за максимум
-
 			if (d->adj_states[cur_node->vertex].state == state_end)
-				int_add_if_not_contains(res, &results, &res_count);
+			{
+				*cur_bin_pos = '\0';
+				res_str = (char*)malloc((cur_bin_pos - res_binary + 1) * sizeof(char));
+				memcpy_s(res_str, (cur_bin_pos - res_binary + 1) * sizeof(char), res_binary, (cur_bin_pos - res_binary + 1) * sizeof(char));
+				str_add_if_not_contain(res_str, &results, &res_count);
+			}
 
-			cur_node = d->adj_states[cur_node->vertex].head; // Проходим по ребру
+			stack_push(path, cur_node); // добавляем текущую в путь
+			cur_node = d->adj_states[cur_node->vertex].head; // переходим к первой связанной вершине
 		}
-
-		//printf_s("_________\n");
-		
-		// Перегружаем точки переключения
-		steps += (1 << new_step) - (steps >> new_step << new_step); // 01101|01 -> 00000|11
+		else
+		{
+			while (!cur_node->next && (res >>= 1, --cur_bin_pos, stack_pop(path, &cur_node))); // Возвращаемся по вершинам пути
+			cur_node = cur_node->next;
+		}
 	}
 
-	sort(results, res_count);
-	char* binary;
-	for (int i = 0; i < res_count; ++i)
+	sort_binary_strs(results, res_count);
+	int prev_res = -1;
+	for (int i = 0; i < res_count && results[i]; ++i)
 	{
-		binary = get_binary(results[i]);
-		printf_s("%10d = %10s\n", results[i], binary);
-		free(binary);
+		res = strtol(results[i], NULL, 2);
+		if (prev_res != res)
+		{
+				printf_s("\n   %-10d = %10s", res, results[i]);
+			prev_res = res;
+		}
+		else
+		{
+			printf_s(" %10s", results[i]);
+		}
 	}
+	printf_s("\n");
 	free(results);
 }
 
@@ -133,31 +145,42 @@ char* get_binary(const int x)
 	return x_r2;
 }
 
-void int_add_if_not_contains(int x, int** ints, int* count)
+
+void str_add_if_not_contain(char* x, char*** strs, int* count)
 {
 	if (count)
 	{
 		for (int i = 0; i < *count; ++i)
-			if ((*ints)[i] == x) return;
-		int* new_ints = (int*)realloc(*ints, sizeof(int) * (++ * count));
-		if (new_ints)
+			if (strcmp((*strs)[i], x) == 0) return;
+		char** new_strs = (char**)realloc(*strs, sizeof(char*) * (++ * count));
+		if (new_strs)
 		{
-			*ints = new_ints;
-			(*ints)[(*count) - 1] = x;
+			*strs = new_strs;
+			(*strs)[(*count) - 1] = x;
 		}
 	}
 }
 
-int sort(int* a, int n) 
+int sort_binary_strs(char** a, int n) 
 {
+	for (int i = 0; i < n - 1; i++)
+	{
+		for (int j = 0; j < n - i - 1; j++)
+		{
+			if (strcmp(a[j], a[j + 1]) < 0)
+			{
+				int tmp = a[j];
+				a[j] = a[j + 1];
+				a[j + 1] = tmp;
+			}
+		}
+	}
 	for (int i = 0; i < n - 1; i++) 
 	{
-		// сравниваем два соседних элемента.
 		for (int j = 0; j < n - i - 1; j++) 
 		{
-			if (a[j] > a[j + 1]) {
-				// если они идут в неправильном порядке, то  
-				//  меняем их местами. 
+			if (strtol(a[j], NULL, 2) > strtol(a[j + 1], NULL, 2)) 
+			{
 				int tmp = a[j];
 				a[j] = a[j + 1];
 				a[j + 1] = tmp;
