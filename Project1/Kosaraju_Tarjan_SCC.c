@@ -109,11 +109,12 @@ int* Condensation_graph_transposition(const graph* g)
 // Может вернуть NULL при ошибке выделения памяти
 int* Condensation_graph(const graph* g)
 {
-	int* times = (int*)calloc(g->count, sizeof(int) * g->count); // компонента
+	int* times = (int*)calloc(g->count, sizeof(int) * g->count);
 	int* low_link = (int*)calloc(g->count, sizeof(int) * g->count);
-	if (!low_link || !times) return NULL;
+	int* component = (int*)calloc(g->count, sizeof(int) * g->count);
+	if (!low_link || !times || !component) return NULL;
 
-	int node_id = 0, cur_time = 1, cur_component = 0;
+	int node_id = 0, cur_time = 1, cur_component = 1;
 	stack* path = stack_alloc(); // Обратный путь
 	node* cur_node, *path_node; // текущий нод вершины
 	for (int i = 0; i < g->count; ++i)
@@ -129,6 +130,7 @@ int* Condensation_graph(const graph* g)
 		on_stack[i] = 1;
 
 		times[i] = low_link[i] = cur_time;
+		component[i] = cur_component;
 
 		while (cur_node)
 		{
@@ -152,6 +154,7 @@ int* Condensation_graph(const graph* g)
 				{
 					on_stack[path_node->vertex] = 0;
 					low_link[path_node->vertex] = times[cur_node->vertex]; // присваиваем ей low_link этой вершины
+					component[path_node->vertex] = cur_component;
 					if (path_node->vertex == cur_node->vertex) break; // если пришли к этой вершине, то завершили компоненту
 				}
 				++cur_component;
@@ -177,7 +180,36 @@ int* Condensation_graph(const graph* g)
 		stack_free(nodes_stack);
 	}
 
+	for (int i = 0; i < g->count; ++i) 
+	{
+		if (component[i] == 0) component[i] = cur_component++;
+		else --component[i];
+	}
+
 	free(times);
+	free(low_link);
 	stack_free(path);
-	return low_link;
+	return component;
+}
+
+graph* get_SCC_graph(graph* g, int* condensation, int count) 
+{
+	int scc_count = 0;
+	for (int i = 0; i < count; ++i) if (scc_count < condensation[i]) scc_count = condensation[i];
+	++scc_count;
+
+	graph* new_graph = graph_init(scc_count);
+	node* cur_node;
+	for (int i = 0; i < count; ++i) // Обходим вершины 
+	{
+		cur_node = g->adj_list[i].head;
+
+		while (cur_node) 
+		{
+			// Ищем дуги между компонентами и если они есть, то создаём дугу в новом графе
+			if (condensation[i] != condensation[cur_node->vertex]) add_arc(new_graph, condensation[i], condensation[cur_node->vertex]);
+			cur_node = cur_node->next;
+		}
+	}
+	return new_graph;
 }

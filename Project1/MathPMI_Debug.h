@@ -18,6 +18,12 @@ void print_ints(char* format, int* a, int count);
 int* input_nums(int* count);
 unsigned char* input_chars();
 
+void print_graph_property(int* print_vertexes_property(graph*), graph* g);
+
+void computational_mathematics_dbg();
+
+void complex_numbers_dbg();
+
 void graphs_dbg();
 
 void shunting_yard_dbg();
@@ -27,6 +33,7 @@ void poly_dbg();
 void binarytrees_dbg();
 
 void bigint_dbg();
+
 
 double legendre_time(int iterations, int* legendre(long long, long long));
 void legendre_symbol_input(int* legendre(long long, long long));

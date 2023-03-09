@@ -1,5 +1,6 @@
 #include "DFA.h"
 #include <stdio.h>
+#include <malloc.h>
 
 dfa* dfa_alloc()
 {

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <locale.h>
 #include <Windows.h>
+#include <direct.h>
 #include "Menu.h"
 #include "MathPMI_Examples.h"
 
@@ -16,19 +17,21 @@ void menu()
 
 	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_CURSOR_INFO cci;
-	cci.bVisible = false;
+	cci.bVisible = true;
 	cci.dwSize = 100;
 	SetConsoleCursorInfo(h, &cci);
 
-	unsigned char* answer;
+	char answer;
 	do
 	{
+		answer = '0';
 		set_console_color(h, Green, Black);
 		printf_s("Выберите подпрограмму из предложенных: ");
 
-		const int start_menu_sections_count = 6;
+		const int start_menu_sections_count = 7;
 		char* start_menu_texts[] =
 		{
+			"Вычислительная математика",
 			"Графы",
 			"Бинарные деревья",
 			"Сортировочная станция",
@@ -37,6 +40,7 @@ void menu()
 			"..."
 		};
 		const void (*methods[])() = {
+			computational_mathematics_dbg,
 			graphs_dbg,
 			binarytrees_dbg,
 			shunting_yard_dbg,
@@ -46,9 +50,11 @@ void menu()
 		int choice = choice_menu(h, cci, start_menu_texts, start_menu_sections_count);
 		methods[choice]();
 
-		printf_s("%s", "Вы хотите продолжить? Да/...\n");
-		answer = input_chars();
-	} while (!strcmp(answer, "Да"));
+		printf_s("%s", "Вы хотите продолжить? Y/N (Да/Нет)\n");
+		//answer = input_chars();
+		while (answer != 'Y' && answer != 'N') 
+			scanf_s("%c", &answer, 1);
+	} while (answer == 'Y');
 
 
 	printf("__КОНЕЦ_ВЫПОЛНЕНИЯ__\n");
@@ -59,11 +65,39 @@ void menu()
 char* file_choice_menu(char* directory_path)
 {
 	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-	_chdir(directory_path);
+	int res = _chdir(directory_path);
 	int files_count;
-	char** files_names = get_files_names(&files_count);
+	WIN32_FIND_DATA* datas;
+	char** files_names;
+	char* choosed;
+	char* new_directory;
+	int choice = 0;
+	bool isChoosed = false;
+	do
+	{
+		datas = get_files(&files_count);
+		files_names = get_files_names(files_count, datas);
+		choice = choice_menu_h(files_names, files_count);
+		if (datas[choice].dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
+		{
+			new_directory = (char*)malloc(sizeof(char) * (strlen(datas[choice].cFileName) + 2));
+			if (!new_directory) return;
+			snprintf(new_directory, strlen(datas[choice].cFileName) + 2, "%s/", datas[choice].cFileName);
+			directory_path = new_directory;
+			free(datas);
+			free(files_names);
+			res = _chdir(directory_path);
+		}
+		else
+		{
+			isChoosed = true;
+			choosed = files_names[choice];
+			free(datas);
+			free(files_names);
+			return choosed;
+		}
+	} while (!isChoosed);
 
-	return files_names[choice_menu_h(files_names, files_count)];
 }
 
 
@@ -72,7 +106,7 @@ int choice_menu_h(const char* sections_text[], const int sections_count)
 {
 	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_CURSOR_INFO cci;
-	cci.bVisible = false;
+	cci.bVisible = true;
 	cci.dwSize = 100;
 	SetConsoleCursorInfo(h, &cci);
 	return choice_menu(h, cci, sections_text, sections_count);
@@ -111,10 +145,14 @@ int choice_menu(HANDLE h, CONSOLE_CURSOR_INFO cci,
 		case 72: // Up
 			if (point.Y > start_Ypos)
 				change_cursor_position(h, &point, get_point(0, point.Y - 1));
+			else
+				change_cursor_position(h, &point, get_point(0, end_Ypos));
 			break;
 		case 80: // Down
 			if (point.Y < end_Ypos)
 				change_cursor_position(h, &point, get_point(0, point.Y + 1));
+			else
+				change_cursor_position(h, &point, get_point(0, start_Ypos));
 			break;
 		case 13: // Enter
 			SetConsoleCursorPosition(h, get_point(0, end_Ypos+2));
@@ -155,30 +193,3 @@ void set_console_color(HANDLE h, ConsoleColor text, ConsoleColor background)
 {
 	SetConsoleTextAttribute(h, (WORD)((background << 4) | text));
 }
-
-//CONSOLE_SCREEN_BUFFER_INFO bi;
-//GetConsoleScreenBufferInfo(h, &bi);
-//COORD point = bi.dwCursorPosition;
-// 
-//modPow_recursion_example();
-	//euclid_recursion_example();
-	//extended_euclid_example();
-	//mul_inverse_example();
-	//linear_diophantine_example();
-	//chinese_reminder_example(iterative);
-	/*legendre_symbol_example(legendre_symbol);
-	legendre_symbol_example(legendre_symbol_2);*/
-
-	//modPow_recursion_input();
-	//euclid_recursion_input();
-	//extended_euclid_input();
-	//linear_diophantine_input();
-	//chinese_reminder_input(iterative);
-	//legendre_symbol_input(legendre_symbol);
-	//legendre_symbol_input(legendre_symbol_2);
-
-	//int iterations = 10e7;
-	//double t1 = legendre_time(iterations, legendre_symbol);
-	////legendre_time(iterations, legendre_symbol_2);
-	//double t2 = legendre_time(iterations, legendre_symbol_3);
-	//printf("Разница во времени выполнения: %f\n\n", (float)(t1 - t2));

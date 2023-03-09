@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <stdio.h>
 
-char** get_files_names(int* files_count);
+WIN32_FIND_DATA* get_files(int* files_count);
+char** get_files_names(int count, WIN32_FIND_DATA* datas);
 
 #endif // _FILESWORK_H_

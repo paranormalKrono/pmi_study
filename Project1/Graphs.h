@@ -21,6 +21,7 @@ typedef struct node
 
 graph* graph_alloc();
 graph* graph_init(int n);
+graph* graph_copy(const graph* g);
 graph* graph_transposition(graph* g);
 node* node_init(int value, node* next);
 void node_free(node* n);

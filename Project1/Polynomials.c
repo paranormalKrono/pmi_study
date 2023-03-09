@@ -121,7 +121,7 @@ char* poly_tostring(const poly* p)
 			if (cur_poly->exp == 0)
 			{
 				current = (char*)malloc(sizeof(char) * _MAX_U64TOSTR_BASE10_COUNT);
-				snprintf(current, strlen(current), "%d", cur_poly->coeff);
+				snprintf(current, _MAX_U64TOSTR_BASE10_COUNT, "%d", cur_poly->coeff);
 			}
 			else if (cur_poly->exp == 1)
 			{
@@ -130,13 +130,13 @@ char* poly_tostring(const poly* p)
 				else
 				{
 					current = (char*)malloc(sizeof(char) * (_MAX_U64TOSTR_BASE10_COUNT + 1));
-					snprintf(current, strlen(current), "%dx", cur_poly->coeff);
+					snprintf(current, _MAX_U64TOSTR_BASE10_COUNT + 1, "%dx", cur_poly->coeff);
 				}
 			}
 			else
 			{
 				current = (char*)malloc(sizeof(char) * (_MAX_U64TOSTR_BASE10_COUNT + 3));
-				snprintf(current, strlen(current), "%dx^%d", cur_poly->coeff, cur_poly->exp);
+				snprintf(current, _MAX_U64TOSTR_BASE10_COUNT + 3, "%dx^%d", cur_poly->coeff, cur_poly->exp);
 			}
 		}
 		else
@@ -148,11 +148,11 @@ char* poly_tostring(const poly* p)
 
 			if (cur_poly->coeff > 0)
 				if (current == "0")
-					snprintf(new_result, strlen(new_result), "%s", current);
+					snprintf(new_result, strlen(result) + strlen(current) + 3, "%s", current);
 				else
-					snprintf(new_result, strlen(new_result), "%s+%s", result, current);
+					snprintf(new_result, strlen(result) + strlen(current) + 3, "%s+%s", result, current);
 			else
-				snprintf(new_result, strlen(new_result), "%s%s", result, current);
+				snprintf(new_result, strlen(result) + strlen(current) + 3, "%s%s", result, current);
 			result = new_result;
 			new_result = NULL;
 		}

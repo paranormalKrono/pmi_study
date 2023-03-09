@@ -1,12 +1,11 @@
 #include <stdlib.h>
 #include "stack_list.h"
 
-struct node
+typedef struct node
 {
     element_t data;
     struct node *next;
-};
-typedef struct node node;
+} node;
 
 struct stack
 {

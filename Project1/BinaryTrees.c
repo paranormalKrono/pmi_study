@@ -1,5 +1,7 @@
 #include "BinaryTrees.h"
 #include <string.h>
+#include <stdio.h>
+#include <malloc.h>
 
 
 void tree_add_subtree(binary_tree* tree, int num);
@@ -7,7 +9,6 @@ void tree_add_subtree(binary_tree* tree, int num);
 binary_tree* tree_create(int *nums, int count) 
 {
 	binary_tree *tree = tree_get_node(nums[0]);
-	binary_tree* currentLeaf = tree;
 	
 	for(int i = 1; i < count; ++i)
 		tree_add_subtree(tree, nums[i]);
@@ -30,6 +31,51 @@ void tree_add_subtree(binary_tree* tree, int num)
 		else
 			tree_add_subtree(tree->right, num);
 	}
+}
+
+binary_tree* tree_get_node(int num)
+{
+	binary_tree* t = (binary_tree*)malloc(sizeof(binary_tree));
+	t->data = num;
+	t->left = NULL;
+	t->right = NULL;
+	return t;
+}
+
+void tree_show_sub(const binary_tree* tree)
+{
+	if (tree->left != NULL)
+	{
+		tree_show_sub(tree->left);
+	}
+	printf("%d ", tree->data);
+	if (tree->right != NULL)
+	{
+		tree_show_sub(tree->right);
+	}
+}
+
+void tree_show(const binary_tree* tree)
+{
+	tree_show_sub(tree);
+	printf("\n");
+}
+
+void tree_free(binary_tree* tree)
+{
+	if (tree == NULL)
+	{
+		return;
+	}
+	if (tree->left != NULL)
+	{
+		tree_free(tree->left);
+	}
+	if (tree->right != NULL)
+	{
+		tree_free(tree->right);
+	}
+	free(tree);
 }
 
 void tree_stern_brocot_fill(binary_tree_stern_brocot *current,
@@ -66,14 +112,6 @@ binary_tree_stern_brocot* tree_stern_brocot_create(unsigned int depth)
 	return tree;
 }
 
-binary_tree* tree_get_node(int num) 
-{
-	binary_tree* t = (binary_tree*)malloc(sizeof(binary_tree));
-	t->data = num;
-	t->left = NULL;
-	t->right = NULL;
-	return t;
-}
 binary_tree_stern_brocot* tree_stern_brocot_node(int num, int den) 
 {
 	binary_tree_stern_brocot* t = (binary_tree_stern_brocot*)malloc(sizeof(binary_tree_stern_brocot));
@@ -84,24 +122,6 @@ binary_tree_stern_brocot* tree_stern_brocot_node(int num, int den)
 	return t;
 }
 
-void tree_show_sub(const binary_tree* tree)
-{
-	if (tree->left != NULL)
-	{
-		tree_show_sub(tree->left);
-	}
-	printf("%d ", tree->data);
-	if (tree->right != NULL)
-	{
-		tree_show_sub(tree->right);
-	}
-}
-
-void tree_show(const binary_tree* tree) 
-{
-	tree_show_sub(tree);
-	printf("\n");
-}
 
 
 void tree_stern_brocot_show(const binary_tree_stern_brocot* tree) 
@@ -115,23 +135,6 @@ void tree_stern_brocot_show(const binary_tree_stern_brocot* tree)
 	{
 		tree_stern_brocot_show(tree->right);
 	}
-}
-
-void tree_free(binary_tree* tree) 
-{
-	if (tree == NULL)
-	{
-		return;
-	}
-	if (tree->left != NULL) 
-	{
-		tree_free(tree->left);
-	}
-	if (tree->right != NULL) 
-	{
-		tree_free(tree->right);
-	}
-	free(tree);
 }
 
 void tree_stern_brocot_free(binary_tree_stern_brocot* tree)

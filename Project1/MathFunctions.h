@@ -2,8 +2,7 @@
 #define	_MATHFUNCTIONS_H_
 //#include <stdarg.h>
 #include "MathPMI_Term1.h"
-#include "MathPMI_Term2.h"
-#define MATH_FUNCTIONS_COUNT 10
+#define MATH_FUNCTIONS_COUNT 6
 
 typedef struct math_function
 {
@@ -22,10 +21,10 @@ static math_function math_fns[MATH_FUNCTIONS_COUNT] = {
 	{"+", 2, &plus},
 	{"/", 2, &division},
 	{"*", 2, &multiplication},
-	{"!", 1, &dfa_implement},
-	{"^", 2, &dfa_intersection},
-	{"|", 2, &dfa_union},
-	{"\\", 2, &dfa_difference},
+	//{"!", 1, &dfa_implement},
+	//{"^", 2, &dfa_intersection},
+	//{"|", 2, &dfa_union},
+	//{"\\", 2, &dfa_difference},
 	{"gcd", 2, &euclid},
 	{"modpow", 3, &modPow} 
 };

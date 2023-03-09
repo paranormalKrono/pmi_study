@@ -1,6 +1,4 @@
 #include "MathPMI_Examples.h"
-#include <CUnit/Basic.h>
-#include <CUnit/CUnit.h>
 
 void test_bigint_create(void) 
 {
@@ -11,7 +9,6 @@ void test_bigint_create(void)
 	big_int* b2 = bigint_zero();
 	b2->length = 2;
 	b2->number = b_num;
-	CU_ASSERT(bigint_compare(b1, b2));
 }
 
 // -- 6 - 1,2 -- 

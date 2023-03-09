@@ -16,3 +16,5 @@ Project1.sln
 .vs/VSWorkspaceState.json
 *.jpg
 *.png
+.vs/
+packages/

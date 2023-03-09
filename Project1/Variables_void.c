@@ -1,19 +1,24 @@
 #include "Variables_void.h"
 #include <stddef.h>
 #include <string.h>
+#include <malloc.h>
 
 vvariable* vvariable_alloc()
 {
 	vvariable* v = (vvariable*)malloc(sizeof(vvariable));
+	if (!v) return NULL;
 	v->value = 0;
 	v->name = "";
+	return v;
 }
 
 vvariable* vvariable_init(char* name, void* value)
 {
 	vvariable* v = (vvariable*)malloc(sizeof(vvariable));
+	if (!v) return NULL;
 	v->value = value;
 	v->name = name;
+	return v;
 }
 
 // ¬озвращает 1, если одинаковы, и 0, если различны

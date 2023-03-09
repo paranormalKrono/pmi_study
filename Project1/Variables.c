@@ -7,6 +7,7 @@ variable* variable_alloc()
 	variable* v = (variable*)malloc(sizeof(variable));
 	v->value = 0;
 	v->name = "";
+	return v;
 }
 
 variable* variable_init(char* name, int value)
@@ -14,6 +15,7 @@ variable* variable_init(char* name, int value)
 	variable* v = (variable*)malloc(sizeof(variable));
 	v->value = value;
 	v->name = name;
+	return v;
 }
 
 // ¬озвращает 1, если одинаковы, и 0, если различны

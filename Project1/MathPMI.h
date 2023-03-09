@@ -7,10 +7,11 @@
 #include "Polynomials.h"
 #include "Shunting_yard.h"
 #include "Graphs.h"
+#include "Graphs_measured.h"
 #include "Graphs_algorithms.h"
 #include "DFA.h"
+#include "Complex_numbers.h"
 #include "MathPMI_Term1.h"
-#include "MathPMI_Term2.h"
 
 
 #endif // _MATHPMI_H_

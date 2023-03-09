@@ -2,6 +2,8 @@
 #include "MathPMI_Debug.h"
 #include "Graph_std.h"
 #include "Menu.h"
+#include "measure_calculating.h"
+#include "Dbg_graphs.h"
 
 void dfa_dbg();
 void sat2(); 
@@ -10,11 +12,12 @@ void condensation_transposition();
 void bipartile_bfs();
 void bipartile_dfs();
 void topological_sort();
+void transitive_closure();
 void graphs_dbg()
 {
 	printf_s("__GRAPHS_DEBUG__\n");
-	
-	const int text_count = 8;
+
+	const int text_count = 9;
 	const char* Text[] = {
 		"Конечные автоматы",
 		"Проверка формулы 2-sat",
@@ -23,7 +26,8 @@ void graphs_dbg()
 		"Проверка на двудольность BFS",
 		"Проверка на двудольность DFS",
 		"Топологическая сортировка",
-		"Ничего"
+		"Транзитивное замыкание",
+		"Построение меры"
 	};
 	const void (*methods[])() = {
 		dfa_dbg,
@@ -32,26 +36,31 @@ void graphs_dbg()
 		condensation_transposition,
 		bipartile_bfs,
 		bipartile_dfs,
-		topological_sort
+		topological_sort,
+		transitive_closure,
+		measure_calculating
 	};
-	const int nothing_choice = text_count - 1;
 
-	int choice = 0;
-	while (choice != nothing_choice)
-	{
-		printf_s("Выберите, что нужно сделать: ");
-		choice = choice_menu_h(Text, text_count);
-		methods[choice]();
-	}
-
-	//print_graph();
+	printf_s("Выберите, что нужно сделать: ");
+	int choice = choice_menu_h(Text, text_count);
+	methods[choice]();
 }
 
 
 void print_variables(const variable** variables, int count);
-void print_graph_property(int* print_vertexes_property(graph*), graph* g);
 graph* get_graph();
 void write_graph(const graph* g);
+
+void transitive_closure() 
+{
+	graph* g = get_graph();
+
+	graph* g_new = transitive_closure_Purdom_graph(g);
+
+	write_graph(g_new);
+}
+
+
 
 dfa* example_dfa1();
 dfa* example_dfa2();
@@ -187,27 +196,99 @@ void topological_sort()
 	graph_free(g);
 }
 
-void write_graph(const graph* g) 
-{
-	char* path = "WorkFiles/";
-	printf_s("\nВыберите файл для записи в него графа:");
-	path = file_choice_menu(path);
-	graph_write(g, path);
-
-	free(path);
-}
-
+int choice_graph_type();
 
 graph* get_graph() 
 {
 	unsigned char* path = "WorkFiles/";
-	printf_s("Выберите файл с графом : ");
+	printf_s("Выберите тип записи графа в файле для чтения: ");
 
+	int choice = choice_graph_type();
+
+	printf_s("Выберите файл с графом: ");
 	path = file_choice_menu(path);
-	graph* g = graph_read(path);
-	free(path);
-	return g;
+
+	graph* g = graph_read(choice, path);
+
+	if (g) 
+	{
+		free(path);
+		return g;
+	}
+	else
+	{
+		printf_s("Ошибка, нет графа.");
+		free(path);
+		return NULL;
+	}
+
 }
+
+graph_m* get_graph_m()
+{
+	unsigned char* path = "WorkFiles/";
+	printf_s("Выберите тип записи графа в файле для чтения: ");
+
+	int choice = choice_graph_type();
+
+	printf_s("Выберите файл с графом: ");
+	path = file_choice_menu(path);
+
+	graph_m* g = graph_m_read(choice, path);
+
+	if (g)
+	{
+		free(path);
+		return g;
+	}
+	else
+	{
+		printf_s("Ошибка, нет графа.");
+		free(path);
+		return NULL;
+	}
+
+}
+
+void write_graph(const graph* g)
+{
+	char* path = "WorkFiles/";
+
+	printf_s("Выберите тип записи графа в файл: ");
+	int choice = choice_graph_type();
+
+	printf_s("Выберите файл для записи графа: ");
+	path = file_choice_menu(path);
+	graph_write(choice, g, path);
+
+	free(path);
+}
+
+void write_graph_m(const graph_m* g)
+{
+	char* path = "WorkFiles/";
+
+	printf_s("Выберите тип записи графа в файл: ");
+	int choice = choice_graph_type();
+
+	printf_s("Выберите файл для записи графа: ");
+	path = file_choice_menu(path);
+	graph_m_write(choice, g, path);
+
+	free(path);
+}
+
+int choice_graph_type() 
+{
+	const int types_count = 2;
+	char* types_texts[] =
+	{
+		"Списки смежности",
+		"Матрица смежности"
+	};
+	return choice_menu_h(types_texts, types_count);
+}
+
 
 void print_variables(const variable** variables, int count) 
 {
