@@ -1,27 +1,17 @@
 #ifndef	_COMPUTATIONAL_MATHEMATICS_H_
 #define	_COMPUTATIONAL_MATHEMATICS_H_
+#include "line_segment.h"
+#include "non_linear_equation.h"
+#include "algebraic_interpolation.h"
+#include "numerical_differentiation.h"
+#include "Shunting_yard.h"
 
-#define constant_p 1
+line_segment** get_function_pairs(line_segment* ls, int values_count, const double (*function)(double x));
+line_segment** get_RPN_function_pairs(int coordinate_index, line_segment* segment, int values_count, const queue const* rpn, variable** variables);
 
-typedef struct line_segment 
-{
-	double A, B;
-} line_segment;
+line_segment** get_reverse_function_pairs(line_segment* ls, int values_count, const double (*function)(double x));
 
-line_segment* line_segment_init(double A, double B);
-line_segment* line_segment_copy(line_segment* ls);
-void print_segments(line_segment** ls, int count);
-
-typedef enum finding_roots_method
-{
-	secant,
-	bisection,
-	newton,
-	modificated_newton
-} finding_roots_method;
-
-int segment_check_inside(const double x, const line_segment const* ls);
-line_segment** non_linear_equation(int* solutions_count, double A, double B, int segments_count, double eps, finding_roots_method frm, const double (*function)(double x), ...);
+line_segment** reverse_function_pairs(line_segment** ls, int values_count);
 
 
 #endif // _COMPUTATIONAL_MATHEMATICS_H_

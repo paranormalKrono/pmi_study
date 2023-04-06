@@ -87,16 +87,16 @@ void dfa_dbg()
 	dfa_print_properties(d1_u_d2, 10, 15, 15);
 
 
-	char* str = "(a^b)|c";
-	vvariable vars [3] = {{"a", d1}, {"b", d2}, {"c", d}};
+	/*char* str = "(a^b)|c";
+	variable vars [3] = {{"a", d1}, {"b", d2}, {"c", d}};
 	dfa* d3 = dfa_get_str_result(str, vars, 3);
-	dfa_print_properties(d3, 8, 15, 15);
+	dfa_print_properties(d3, 8, 15, 15);*/
 
 	free(d);
 	dfa_free(d1);
 	dfa_free(d2);
 	//dfa_free(d1_u_d2);
-	dfa_free(d3);
+	//dfa_free(d3);
 	printf_s("\n");
 }
 

@@ -1,11 +1,8 @@
-//#include <limits.h>
-#include <stdio.h>
-//#include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
 #include <math.h> 
-//#include <stdarg.h>
-#include "computational_mathematics.h"
+#include "line_segment.h"
+#include <stdio.h>
 
 
 line_segment* line_segment_init(double A, double B)
@@ -26,9 +23,19 @@ int segment_check_inside(const double x, const line_segment* ls)
 	return x >= ls->A && x <= ls->B;
 }
 
+void free_line_segments(line_segment** ls, int count)
+{
+	for (int i = 0; i < count; ++i)
+	{
+		free(ls[i]);
+	}
+	free(ls);
+}
+
+
 void print_segment(line_segment* ls)
 {
-	printf_s("[%.6f, %.6f]", ls->A, ls->B);
+	printf_s("[%.E, %.E]", ls->A, ls->B);
 }
 void print_segments(line_segment** ls, int count)
 {

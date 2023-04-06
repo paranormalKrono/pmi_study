@@ -1,7 +1,61 @@
 ///*
 /*
+// f(xi, ..., xi+k)
+// 1 столбец f(x_0) ... f(x_degree)
+		//printf_s("[0, %d] | f(x%d) = %lf\n", i, i, fk[0][i]);
+
+			//printf_s("[%d, %d] | f(x%d,...,x%d) | [%d, %d] - [%d, %d] | x%d - x%d\n", k, i, i, i + k, k - 1, i+1, k - 1, i, i, i + k);
+
+	PyGraph(0, NULL);
+
+	//GraphInit(500, 500);
+	MainLoop();
+
+	PyGraph_Finish();
+
+PyObject *pModule;
+
+void Python(int argc, wchar_t **argv) // constructor: initialize Python
+{
+   Py_Initialize();
+   PySys_SetArgv(argc, argv);
+}
+
+void Python_Finish() { Py_Finalize(); }
+
+void PyGraph(int argc, wchar_t **argv) // constructor: import graphlib.py
+{
+   Python(argc, argv);
+   PyRun_SimpleString("import sys");
+   PyRun_SimpleString("import os");
+   PyRun_SimpleString("sys.path.append(os.getcwd())");
+   pModule = PyImport_Import(PyUnicode_FromString("graphlib"));
+   if (!pModule)
+	  printf_s("Failed to load <graphlib.py>");
+}
+
+void PyGraph_Finish() // destructor: release graphlib.py
+{
+   Py_DECREF(pModule);
+   Python_Finish();
+}
 
 
+
+	//show_bracket_sequence();
+	//show_max_value_segment();
+	//show_repeated_int();
+	//show_complex();
+	//show_squares_intersection_area();
+
+//// Если достаточное условие сходимости метода Ньютона не выполнено
+//if (fdr == 0 || fr * function_deriative2(x) <= 0)
+//{
+//	x = ls[i]->A + l / 101 * (rand() % 101); // один из концов 101 деления
+//	fdr = function_deriative(x);
+//	fr = function(x);
+//	printf_s("\nНе выполнено условие сходимости, x изменён\n");
+//}
 
 
 Отладка фибоначчиевых деревьев

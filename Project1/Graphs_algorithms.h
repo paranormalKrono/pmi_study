@@ -1,7 +1,7 @@
 #ifndef _GRAPHS_ALGORITHMS_H_
 #define	_GRAPHS_ALGORITHMS_H_
 #include "Graphs.h"
-#include "Variables.h"
+#include "variables.h"
 #include "Lessons/sq/stack_list.h"
 #include "Lessons/sq/queue_list.h"
 

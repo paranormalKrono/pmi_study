@@ -106,11 +106,11 @@ void show_queue2(queue* q)
     printf("\n");
 }
 
-dfa* dfa_get_str_result(char* str, const vvariable* vars, int count) 
-{
+dfa* dfa_get_str_result(char* str, const variable* vars, int count) 
+{/*
     queue* q = get_Reverse_Polish_Notation(str);
     show_queue2(q);
     dfa* d = (dfa*)get_RPN_result(q, vars, count);
     queue_free(q);
-    return d;
+    return d;*/
 }

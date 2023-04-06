@@ -1,6 +1,6 @@
 #ifndef	_DFA_H_
 #define	_DFA_H_
-#include "Variables_void.h"
+#include "variables.h"
 
 typedef enum dfa_states
 {
@@ -65,6 +65,6 @@ dfa* dfa_intersection(dfa* d1, dfa* d2);
 dfa* dfa_union(dfa* d1, dfa* d2);
 dfa* dfa_difference(dfa* d1, dfa* d2);
 
-dfa* dfa_get_str_result(char* str, const vvariable* vars, int count);
+dfa* dfa_get_str_result(char* str, const variable* vars, int count);
 
 #endif // _DFA_H_

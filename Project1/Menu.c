@@ -25,7 +25,7 @@ void menu()
 	do
 	{
 		answer = '0';
-		set_console_color(h, Green, Black);
+		set_console_color(h, White, Black);
 		printf_s("Выберите подпрограмму из предложенных: ");
 
 		const int start_menu_sections_count = 7;

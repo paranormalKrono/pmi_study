@@ -1,6 +1,13 @@
+
+#include <Python.h>
+
 #include "menu.h"
 #include "MathPMI_Examples.h"
 #include "Small_exercises.h"
+
+#include "python_gui.h"
+#include "Burnside.h"
+
 
 int main()
 {
@@ -14,15 +21,12 @@ int main()
 	cci.dwSize = 100;
 	SetConsoleCursorInfo(h, &cci);
 
-	//show_bracket_sequence();
-	//show_max_value_segment();
-	//show_repeated_int();
-	//show_complex();
-	//show_squares_intersection_area();
+	printf_s("@paranormalKrono\n\n");
+
+	//burnside_dbg();
+	//create_window();
 	menu();
 	
-
-
-	int b;
-	scanf_s("%d", &b);
+	int kk;
+	scanf_s("%d", &kk);
 }

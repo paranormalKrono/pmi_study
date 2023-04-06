@@ -10,9 +10,9 @@ int get_mathfunction_index(char* name)
 	return -1;
 }
 
-void* get_function_result(math_function mf, void** parameters)
+double get_mathfunction_result(math_function mf, double* parameters)
 {
-	void* (*mff)(void*) = mf.fn;
+	double (*mff)(double, ...) = mf.fn;
 	switch (mf.parameters_count)
 	{
 	case 1:
@@ -28,19 +28,19 @@ void* get_function_result(math_function mf, void** parameters)
 	}
 }
 
-float plus(float a, float b)
+double plus(double a, double b)
 {
 	return a + b;
 }
-float minus(float a, float b)
+double minus(double a, double b)
 {
 	return a - b;
 }
-float division(float a, float b)
+double division(double a, double b)
 {
 	return a / b;
 }
-float multiplication(float a, float b)
+double multiplication(double a, double b)
 {
 	return a * b;
 }

@@ -1,23 +1,25 @@
+//#include <stdio.h>
+//#include <stdlib.h>
 #include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
 #include <math.h> 
 #include <stdarg.h>
-#include "computational_mathematics.h"
+#include "non_linear_equation.h"
 
 void secant_method(const double (*function)(double x), line_segment** ls, int count, double eps)
 {
-	printf_s("\n--- Метод секущих ---\n");
+	//printf_s("\n--- Метод секущих ---\n");
 	double x1, x2, f1, f2;
+	double ls_length;
 	int approximation_counter;
 	for (int i = 0; i < count; ++i)
 	{
-		print_segment(ls[i]);
+		//print_segment(ls[i]);
 
 		x1 = ls[i]->A;
 		x2 = ls[i]->B;
+		ls_length = fabs(ls[i]->B - ls[i]->A);
 
 		approximation_counter = 1;
 		while (fabs(x2 - x1) > eps)
@@ -26,8 +28,13 @@ void secant_method(const double (*function)(double x), line_segment** ls, int co
 			f2 = function(x2);
 			x1 = x1 - constant_p * (x2 - x1) * f1 / (f2 - f1);
 			x2 = x2 - constant_p * (x1 - x2) * f2 / (f1 - f2);
-			printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, x1, x2, fabs(x2 - x1));
+			//printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, x1, x2, fabs(x2 - x1));
 			approximation_counter++;
+			if (approximation_counter > ls_length * 10 / eps)
+			{
+				printf_s("Превышено количество итераций\n");
+				break;
+			}
 		}
 
 		if (x1 < x2) 
@@ -40,19 +47,19 @@ void secant_method(const double (*function)(double x), line_segment** ls, int co
 			ls[i]->A = x2;
 			ls[i]->B = x1;
 		}
-		printf_s("\n");
+		//printf_s("\n");
 	}
 }
 
 // Делим пополам и выбираем промежуток, где есть корень
 void bisection_method(const double (*function)(double x), line_segment** ls, int count, double eps)
 {
-	printf_s("\n--- Метод бисекций ---\n");
+	//printf_s("\n--- Метод бисекций ---\n");
 	double fl, fc, fr, center, length;
 	int approximation_counter;
 	for (int i = 0; i < count; ++i) 
 	{
-		print_segment(ls[i]);
+		//print_segment(ls[i]);
 
 		length = fabs(ls[i]->B - ls[i]->A);
 		center = ls[i]->A + length / 2;
@@ -70,8 +77,8 @@ void bisection_method(const double (*function)(double x), line_segment** ls, int
 			}
 			else if (fc == 0)
 			{
-				printf_s("\nНайдено решение в точке x = %.3f\n", center);
-				printf_s("Рекомендуется изменить число делений\n\n");
+				//printf_s("\nНайдено решение в точке x = %.3f\n", center);
+				//printf_s("Рекомендуется изменить число делений\n\n");
 			}
 			else 
 			{
@@ -82,23 +89,21 @@ void bisection_method(const double (*function)(double x), line_segment** ls, int
 			center = ls[i]->A + length / 2;
 			fc = function(center);
 
-			printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, ls[i]->A, ls[i]->B, length);
+			//printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, ls[i]->A, ls[i]->B, length);
 			approximation_counter++;
 		}
-		printf_s("\n");
+		//printf_s("\n");
 	}
 }
 
-
-
 void newton_method(const double (*function)(double x), const double (*function_deriative)(double x), const double (*function_deriative2)(double x), line_segment** ls, int count, double eps)
 {
-	printf_s("\n---Метод Ньютона ---\n");
+	//printf_s("\n---Метод Ньютона ---\n");
 	double x, xp, fr, fdr, l;
 	int approximation_counter;
 	for (int i = 0; i < count; ++i)
 	{
-		print_segment(ls[i]);
+		//print_segment(ls[i]);
 
 		l = fabs(ls[i]->B - ls[i]->A);
 		x = ls[i]->A + l / 2; // Середина деления
@@ -111,10 +116,10 @@ void newton_method(const double (*function)(double x), const double (*function_d
 			fdr = function_deriative(x);
 			xp = x;
 			x = x - constant_p * fr / fdr;
-			if (x < xp)
+			/*if (x < xp)
 				printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, x, xp, fabs(xp - x));
 			else
-				printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, xp, x, fabs(xp - x));
+				printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, xp, x, fabs(xp - x));*/
 			approximation_counter++;
 		}
 
@@ -129,19 +134,19 @@ void newton_method(const double (*function)(double x), const double (*function_d
 			ls[i]->B = x;
 		}
 
-		printf_s("\n");
+		//printf_s("\n");
 	}
 }
 
 void modificated_newton_method(const double (*function)(double x), const double (*function_deriative)(double x), const double (*function_deriative2)(double x), line_segment** ls, int count, double eps)
 {
-	printf_s("\n--- Модифицированный метод Ньютона ---\n");
+	//printf_s("\n--- Модифицированный метод Ньютона ---\n");
 	double x, xp, fr, fdr, l;
 
 	int approximation_counter;
 	for (int i = 0; i < count; ++i)
 	{
-		print_segment(ls[i]);
+		//print_segment(ls[i]);
 
 		l = fabs(ls[i]->B - ls[i]->A);
 		x = ls[i]->A + l / 2; // Середина деления
@@ -156,10 +161,10 @@ void modificated_newton_method(const double (*function)(double x), const double 
 			fr = function(x);
 			xp = x;
 			x = x - constant_p * fr / fdr;
-			if (x < xp)
+			/*if (x < xp)
 				printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, x, xp, fabs(xp - x));
 			else
-				printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, xp, x, fabs(xp - x));
+				printf_s("\n\t%d] [%.6f, %.6f] [%.10f]", approximation_counter, xp, x, fabs(xp - x));*/
 			approximation_counter++;
 		}
 
@@ -174,25 +179,15 @@ void modificated_newton_method(const double (*function)(double x), const double 
 			ls[i]->B = x;
 		}
 
-		printf_s("\n");
+		//printf_s("\n");
 	}
 }
 
-//// Если достаточное условие сходимости метода Ньютона не выполнено
-//if (fdr == 0 || fr * function_deriative2(x) <= 0)
-//{
-//	x = ls[i]->A + l / 101 * (rand() % 101); // один из концов 101 деления
-//	fdr = function_deriative(x);
-//	fr = function(x);
-//	printf_s("\nНе выполнено условие сходимости, x изменён\n");
-//}
-
-
 
 // отрезок [A,B], количество делений отрезка и необходимая точность |x* - x| < eps, функция, производные фнкции вида double deriative(double x)
-line_segment** non_linear_equation(int* solutions_count, double A, double B, int segments_count, double eps, finding_roots_method frm, const double (*function)(double x), ...)
+double** non_linear_equation(int* solutions_count, double A, double B, int segments_count, double eps, finding_roots_method frm, const double (*function)(double x), ...)
 { 
-	printf_s("[%.3f, %.3f], segments_count = %d, eps = %.10f\n", A, B, segments_count, eps);
+	//printf_s("[%.3f, %.3f], segments_count = %d, eps = %.10f\n", A, B, segments_count, eps);
 
 	line_segment** solution_ls = (line_segment**)malloc(sizeof(line_segment*)),** ltmp;
 	if (!solution_ls) return NULL;
@@ -216,13 +211,13 @@ line_segment** non_linear_equation(int* solutions_count, double A, double B, int
 			if (!ltmp) 
 			{
 				free(solution_ls);
-				printf_s("Не удалось выделить память под отрезки");
+				//printf_s("Не удалось выделить память под отрезки");
 				return NULL;
 			}
 			solution_ls = ltmp;
 			solution_ls[sc - 1] = line_segment_init(a, b);
 		} 
-		else if (f1 * f2 == 0)
+		/*else if (f1 * f2 == 0)
 		{
 			if (f1 == 0)
 			{
@@ -234,7 +229,7 @@ line_segment** non_linear_equation(int* solutions_count, double A, double B, int
 			}
 			else printf_s("Найдено решение в точке x = %.3f\n", b);
 			printf_s("Рекомендуется изменить число делений\n");
-		}
+		}*/
 
 		a = b;
 		b += h;
@@ -272,6 +267,15 @@ line_segment** non_linear_equation(int* solutions_count, double A, double B, int
 
 	va_end(deriatives);
 	
+
 	*solutions_count = sc;
-	return solution_ls;
+	double* solutions = malloc(sizeof(double) * sc);
+	for (int i = 0; i < sc; ++i)
+	{
+		solutions[i] = (solution_ls[i]->B - solution_ls[i]->A) / 2 + solution_ls[i]->A;
+		free(solution_ls[i]);
+	}
+	free(solution_ls);
+
+	return solutions;
 }

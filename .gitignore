@@ -18,3 +18,7 @@ Project1.sln
 *.png
 .vs/
 packages/
+Project1/.idea/
+Project1/.vscode/
+Project1/__pycache__/
+.idea/

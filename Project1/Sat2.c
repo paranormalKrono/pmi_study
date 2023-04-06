@@ -1,6 +1,7 @@
 #include "Graphs_algorithms.h"
 #include <string.h>
 #include <stdlib.h>  
+#include <stdio.h>
 #include "Main.h"
 
 typedef enum parse_states
