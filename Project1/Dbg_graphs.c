@@ -1,7 +1,7 @@
 #include <Windows.h> 
 #include "MathPMI_Debug.h"
 #include "Graph_std.h"
-#include "Menu.h"
+#include "Menu_c.h"
 #include "measure_calculating.h"
 #include "Dbg_graphs.h"
 

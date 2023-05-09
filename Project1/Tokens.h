@@ -1,7 +1,7 @@
 #ifndef	_TOKENS_H_
 #define	_TOKENS_H_
 
-typedef enum token_type { Unk, Number, Operator, LPar, RPar, Function, Comma, Variable } token_type;
+typedef enum token_type { Unk, Number, Operator, LPar, RPar, Function, Prefix_function, Comma, Variable } token_type;
 
 typedef struct token
 {

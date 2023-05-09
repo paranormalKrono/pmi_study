@@ -21,23 +21,24 @@ queue * queue_alloc ()
     q->head = q->tail = NULL;
     return q;
 }
-queue * queue_clone (const queue *q)
+queue * queue_clone(const queue *before)
 {
-    queue *r = queue_alloc();
-    node *t = q->head;
-    if (!r) return NULL;
+    queue *clone = queue_alloc();
+    if (!clone) return NULL;
 
-    while (t != NULL)
+    node *cur_node = before->head;
+
+    while (cur_node)
     {
-        if (!queue_push(r, t->data))
+        if (!queue_push(clone, cur_node->data))
         {
-            queue_free(r);
+            queue_free(clone);
             return NULL;
         }
-        t = t->next;
+        cur_node = cur_node->next;
     }
 
-    return r;
+    return clone;
 }
 void    queue_free  (queue *q)
 {

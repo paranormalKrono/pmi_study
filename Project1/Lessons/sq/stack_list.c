@@ -21,36 +21,34 @@ stack * stack_alloc ()
 
     return s;
 }
-stack * stack_clone (const stack *s)
+
+stack * stack_clone (const stack *before)
 {
-    stack *r = malloc(sizeof(*r));
+    if (!before) return NULL;
 
-    node *t = s->top;
-    node **n = &(r->top);
+    stack* clone = stack_alloc();
+    if (!clone) return NULL;
 
-    if (!r) return NULL;
+    node* cur_node = before->top;
+    if (!cur_node) return clone;
 
-    while (t != NULL)
+    node* cur_clone_node = clone->top = malloc(sizeof(node));
+    cur_clone_node->data = cur_node->data;
+    cur_clone_node->next = NULL;
+    
+
+    while (cur_node->next)
     {
-        *n = malloc(sizeof(node));
-        if (!*n)
-        {
-            stack_free(r);
-            return NULL;
-        }
-
-        (*n)->data = t->data;
-        (*n)->next = NULL;
-
-        n = &((*n)->next);
-
-        t = t->next;
+        cur_node = cur_node->next;
+        cur_clone_node = cur_clone_node->next = malloc(sizeof(node));
+        cur_clone_node->data = cur_node->data;
+        cur_clone_node->next = NULL;
     }
 
-    return r;
+    return clone;
 }
 
-void    stack_free  (stack *s)
+void stack_free (stack *s)
 {
     while (stack_pop(s, NULL));
     free(s);
@@ -80,14 +78,14 @@ int stack_push (stack *s, element_t  e)
 }
 
 /* если e = NULL, игнорируется */
-int stack_pop  (stack *s, element_t *e)
+int stack_pop  (stack *st, element_t *el)
 {
-    node *t = s->top;
-    if (s->top == NULL) return 0;
+    node *cur_node = st->top;
+    if (!cur_node) return 0;
 
-    s->top = t->next;
-    if (e) *e = t->data;
-    free(t);
+    st->top = cur_node->next;
+    if (el) *el = cur_node->data;
+    free(cur_node);
 
     return 1;
 }

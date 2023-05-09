@@ -47,7 +47,7 @@ void numerical_differentiation_dbg()
 	line_segment* segment;
 	double x0, h, real_first_deriative, real_second_deriative;
 	double* first_deriatives, *second_deriatives;
-	int pairs_count;
+	int argument_values_count;
 	char answer;
 	do
 	{
@@ -61,22 +61,22 @@ void numerical_differentiation_dbg()
 		printf_s("¬ведите отступы между точками дифференцировани€ (h): ");
 		scanf_s("%lf", &h);
 
-		pairs_count = input_pairs_count();
+		argument_values_count = input_pairs_count();
 
-		segment = line_segment_init(x0, x0 + h * (pairs_count-1));
+		segment = line_segment_init(x0, x0 + h * (argument_values_count-1));
 
-		function_pairs = get_RPN_function_pairs(0, segment, pairs_count, rpn, variables);
+		function_pairs = get_RPN_function_pairs(0, segment, argument_values_count, rpn, variables);
 
 
 		printf_s("\n[%10s\t\t %10s\t\t %10s\t\t %10s\t\t %20s\t\t %10s\t\t %10s\t\t %20s]\n",
 			"x", "f(x)", "fc'(x)", "f'(x)", "|fc'(x) - f'(x)|", "fc''(x)", "f''(x)", "|fc''(x) - f''(x)|"
 		);
 
-		first_deriatives = get_deriative_list(h, function_pairs, pairs_count);
-		second_deriatives = get_second_deriative_list(h, function_pairs, pairs_count);
+		first_deriatives = get_deriative_list(h, function_pairs, argument_values_count);
+		second_deriatives = get_second_deriative_list(h, function_pairs, argument_values_count);
 
 		variables[0]->value = x0;
-		for (int i = 0; i < pairs_count; ++i)
+		for (int i = 0; i < argument_values_count; ++i)
 		{
 			real_first_deriative = get_RPN_result(rpn_deriative, variables, variables_count);
 			real_second_deriative = get_RPN_result(rpn_second_deriative, variables, variables_count);
@@ -90,7 +90,7 @@ void numerical_differentiation_dbg()
 
 
 
-		for (int i = 0; i < pairs_count; ++i)
+		for (int i = 0; i < argument_values_count; ++i)
 		{
 			free(function_pairs[i]);
 		}

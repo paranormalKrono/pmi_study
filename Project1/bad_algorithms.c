@@ -1,5 +1,92 @@
 ///*
 /*
+* 
+* 
+
+		if (ImGui::Button("Получить информацию из файла calculation_functions.txt"))
+		{
+			printf_s("Выберите тип записи графа в файле для чтения: ");
+
+			printf_s("Выберите файл с графом: ");
+			char* path = file_choice_menu_stdir();
+
+			FILE* f;
+			fopen_s(&f, path, "r");
+			if (f)
+			{
+				fscanf_s(f, "%d", &fixed);
+				fscanf_s(f, "%d", &vertex_count);
+
+				char cur_char = ' ';
+				fgetc(f);
+				for (int i = 0; i < vertex_count; ++i)
+				{
+					fscanf_s(f, "%d -", &vertex_arc);
+					cur_char = fgetc(f);
+					while (cur_char != '\n' && cur_char != '\0' && cur_char != -1)
+					{
+						fscanf_s(f, "%d", &vertex_arc);
+						add_arc(g, i, vertex_arc);
+						cur_char = fgetc(f);
+					}
+				}
+				fclose(f);
+			}
+			else
+			{
+				perror("Error");
+			}
+		}
+
+
+
+		//// Переменные
+		//static int variables_count = 1; ImGui::InputInt("input int", &variables_count);
+
+		//static char variable_name[10] = "";
+		//static float value = 0.0f;
+		//if (ImGui::CollapsingHeader("Variables", ImGuiTreeNodeFlags_None))
+		//{
+		//	ImGui::Text("IsItemHovered: %d", ImGui::IsItemHovered());
+		//	for (int i = 0; i < variables_count; i++)
+		//	{
+		//		// Ввод переменных
+		//		ImGui::InputText("default", variable_name, 10); ImGui::SameLine(0, 20);
+		//		ImGui::DragFloat("Value", &value);
+		//	}
+		//}
+
+
+	//const int c = 100;
+	//for (int n = 1; n < c; ++n)
+	//{
+	//	printf_s("\n\n---||---\n");
+	//	printf_s("\nn = %d\n", n);
+	//	//res = calculate_all_combinations(n);
+	//	res = calculate_all_combinations_binary(n);
+	//	printf_s("  ");
+	//	//calculate_all_combinations_by_formula(n);
+	//	printf_s("\n");
+	//	printf_s("Результат: %d\n\n", res);
+
+	//	calculate_by_burnside(n);
+	//}
+
+//int calculate_all_combinations_by_formula(int n)
+//{
+//	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+//	double inner_result;
+//	inner_result = (pow(2, n) + 2 * pow(2, n)) / n;
+//
+//	printf_s("[");
+//	set_console_color_(h, LightMagenta, Black);
+//	printf_s("%.1lf", inner_result);
+//	set_console_color_(h, White, Black);
+//	printf_s("]");
+//	return inner_result;
+//}
+
+
 // f(xi, ..., xi+k)
 // 1 столбец f(x_0) ... f(x_degree)
 		//printf_s("[0, %d] | f(x%d) = %lf\n", i, i, fk[0][i]);

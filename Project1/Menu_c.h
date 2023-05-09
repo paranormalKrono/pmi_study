@@ -1,5 +1,5 @@
-#ifndef _MENU_H_
-#define	_MENU_H_
+#ifndef _MENU_C_H_
+#define	_MENU_C_H_
 #include "FilesWork.h"
 
 typedef enum
@@ -22,8 +22,10 @@ typedef enum
 	White = 15
 } ConsoleColor;
 
-void menu(); 
+
+void menu_c();
+char* file_choice_menu_stdir();
 char* file_choice_menu(char* directory_path);
 int choice_menu_h(const char* sections_text[], const int sections_count);
 
-#endif // _MENU_H_
+#endif // _MENU_C_H_

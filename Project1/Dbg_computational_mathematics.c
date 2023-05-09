@@ -1,8 +1,8 @@
 #include <math.h> 
 #include <float.h>
-#include "Menu.h"
 #include "computational_mathematics.h"
 #include "dbg_computational_mathematics.h"
+#include "Menu_c.h"
 
 
 void computational_mathematics_dbg()
@@ -57,13 +57,13 @@ line_segment* input_segment()
 
 int input_pairs_count()
 {
-	int pairs_count = 0;
+	int argument_values_count = 0;
 	do
 	{
 		printf_s("Введите количество пар аргумент-значение функции: ");
-		scanf_s("%d", &pairs_count);
-	} while (pairs_count <= 1);
-	return pairs_count;
+		scanf_s("%d", &argument_values_count);
+	} while (argument_values_count <= 1);
+	return argument_values_count;
 }
 
 double input_epsilon() 

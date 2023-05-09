@@ -14,24 +14,24 @@
 int get_operation_priority(const char op);
 char* parse_number(const char** cur_str);
 
-void show_stack(stack* q)
+void show_stack(stack* st)
 {
-	stack* c = stack_clone(q);
-	token* e = token_alloc();
-	while (stack_pop(c, &e))
+	stack* clone = stack_clone(st);
+	token* el = token_alloc();
+	while (stack_pop(clone, &el))
 	{
-		printf_s("%s ", e->name);
+		printf_s("%s ", el->name);
 	}
 	printf_s("\n");
 }
 
 void show_queue(queue* q)
 {
-	queue* c = queue_clone(q);
-	token* e = token_alloc();
-	while (queue_pop(c, &e))
+	queue* clone = queue_clone(q);
+	token* el = token_alloc();
+	while (queue_pop(clone, &el))
 	{
-		printf("%s ", e->name);
+		printf("%s ", el->name);
 	}
 	printf("\n");
 }
@@ -39,105 +39,115 @@ void show_queue(queue* q)
 queue* get_Reverse_Polish_Notation(char* str)
 {
 	char* cur_str_index = str, *name_start_index = str;
-	bool isName = false;
 	token* token_temp, ** token_void;
+	token_type type_tmp;
 
-	queue* result_queue = queue_alloc();
+	queue* rpn = queue_alloc();
 	stack* tokens_stack = stack_alloc();
 
 	while (*cur_str_index) 
 	{
-		/*printf_s("stack: ");
-		show_stack(tokens_stack);
-		printf_s("queue: ");
-		show_queue(result_queue);
-		printf_s("\n");*/
+		//show_stack(tokens_stack);
+		//show_queue(rpn);
+		//printf_s("%s\n\n", cur_str_index);
 
 		switch (*cur_str_index)
 		{
 		case '(':
-			if (isName) isName = false, stack_push(tokens_stack, token_init(parse_from_to(&name_start_index, cur_str_index), Function));
 			stack_push(tokens_stack, token_init("(", LPar));
 			break;
 
 		case ')':
-			if (isName) isName = false, queue_push(result_queue, token_init(parse_from_to(&name_start_index, cur_str_index), Variable));
 			token_temp = token_alloc();
-			while (stack_pop(tokens_stack, &token_temp)
-			&&(token_temp->type != LPar))
-			{
-				queue_push(result_queue, token_temp);
-				token_temp = token_alloc();
-			}
-			if (stack_pop(tokens_stack, &token_temp))
-				if (token_temp->type == Function) queue_push(result_queue, token_temp);
-				else stack_push(tokens_stack, token_temp);
-			else free(token_temp);
-			//if (*cur_str_index == ',') 	stack_push(tokens_stack, token_init(",", LPar));
-			break;
 
-		case ',':
-			if (isName) isName = false, queue_push(result_queue, token_init(parse_from_to(&name_start_index, cur_str_index), Variable));
-			token_temp = token_alloc();
+			// Выталкиваем из стека всё до открывающей скобки в rpn
 			while (stack_pop(tokens_stack, &token_temp)
 				&& (token_temp->type != LPar))
 			{
-				queue_push(result_queue, token_temp);
+				queue_push(rpn, token_temp);
 				token_temp = token_alloc();
 			}
-			free(token_temp);
 			break;
 
-		case '*': case '/': case '+': case '-': case '^': case '|': case '!': case '\\': // Выталкиваем операции большего приоритета и добавляем в стек текущую
-			if (isName) isName = false, queue_push(result_queue, token_init(parse_from_to(&name_start_index, cur_str_index), Variable));
+		case ',':
+			token_temp = token_alloc();
+
+			// Выталкиваем из стека всё до открывающей скобки в rpn
+			while (stack_pop(tokens_stack, &token_temp) 
+				&& (token_temp->type != LPar))
+			{
+				queue_push(rpn, token_temp);
+				token_temp = token_alloc();
+			}
+			// Возвращаем отрывающую скобку в стек
+			stack_push(tokens_stack, token_temp);
+			break;
+
+		case '*': case '/': case '+': case '-': case '^': case '|': case '!': case '\\':
+
+			// Создаём операцию для rpn
+			char* operation_name = (char*)malloc(sizeof(char) * 2);
+			operation_name[0] = *cur_str_index;
+			operation_name[1] = '\0';
+			type_tmp = Operator;
+
+			// смотрим на предыдущий элемент и проверяем является ли операция унарной или бинарной
+			if (token_void = queue_get_front(rpn), token_void)
+			{
+				if ((*(cur_str_index - 1)) == ',' || (*(cur_str_index - 1)) == '(')
+					type_tmp = Prefix_function;
+			}
+			else type_tmp = Prefix_function;
+
+			// Выталкиваем префиксные функции или операции большего или равного приоритета в rpn
 			while ((token_void = stack_get_front(tokens_stack), token_void)
-				&& get_operation_priority((*token_void)->name[0]) >= get_operation_priority(*cur_str_index))
+				&& ((*token_void)->type == Prefix_function
+					|| (*token_void)->type == Operator && get_operation_priority((*token_void)->name[0]) >= get_operation_priority(*cur_str_index)))
 				if (token_temp = token_alloc(), stack_pop(tokens_stack, &token_temp))
-				queue_push(result_queue, token_temp);
-				else free(token_temp);
+					queue_push(rpn, token_temp);
 
-			char* s_temp = (char*)malloc(sizeof(char)*2);
-			s_temp[0] = *cur_str_index;
-			s_temp[1] = '\0';
+			stack_push(tokens_stack, token_init(operation_name, type_tmp));
 
-			stack_push(tokens_stack, token_init(s_temp, Function));
 			break;
 
 		case '0': case '1': case '2': case '3': case  '4': case  '5': case  '6': case  '7': case '8': case  '9': // Разбираем число
-			if (isName) isName = false, stack_push(tokens_stack, token_init(parse_from_to(&name_start_index, cur_str_index), Variable));
 			unsigned char* num = parse_number(&cur_str_index); // Вынимаем числа в виде 10.001
-			queue_push(result_queue, token_init(num, Number)); // Происходит переход указателя к концу числа, будет работать для вещественных чисел
+			queue_push(rpn, token_init(num, Number)); // Происходит переход указателя к концу числа, будет работать для вещественных чисел
 			cur_str_index--;
 			break;
 		case ' ':
 			break;
 		default:
-			if (!isName) name_start_index = cur_str_index;
-			isName = true;
+			name_start_index = cur_str_index;
+			while (*cur_str_index != ' ' && *cur_str_index != '*' && *cur_str_index != '/' && *cur_str_index != '+' && *cur_str_index != '-'
+				&& *cur_str_index != '^' && *cur_str_index != '|' && *cur_str_index != '\\' && *cur_str_index != '!' && *cur_str_index != ','
+				&& *cur_str_index != ')' && *cur_str_index != '(' && *cur_str_index != '\0') cur_str_index++;
+			if (*cur_str_index == '(') stack_push(tokens_stack, token_init(parse_from_to(&name_start_index, cur_str_index), Prefix_function));
+			else queue_push(rpn, token_init(parse_from_to(&name_start_index, cur_str_index), Variable));
+			cur_str_index--;
 			break;
 		}
 		cur_str_index++;
 	}
-	if (isName) isName = false, stack_push(tokens_stack, token_init(parse_from_to(&name_start_index, cur_str_index), Variable));
 
 	/*printf_s("stack: ");
 	show_stack(tokens_stack);
 	printf_s("queue: ");
-	show_queue(result_queue);
+	show_queue(rpn);
 	printf_s("\n");*/
 
 	// Выталкиваем операции из стека
 	while (stack_pop(tokens_stack, &token_temp))
-		queue_push(result_queue, token_temp);
+		queue_push(rpn, token_temp);
 
-	//printf_s("result: ");
-	//show_queue(result_queue);
-	//printf_s("\n");
+	printf_s("result: ");
+	show_queue(rpn);
+	printf_s("\n");
 
 	stack_free(tokens_stack);
 
 
-	return result_queue;
+	return rpn;
 }
 
 unsigned char* parse_number(const char** cur_str)
@@ -174,7 +184,7 @@ int get_vv_index(char* s, const variable** variables, int count)
 	return -1;
 }
 
-double get_RPN_result(const queue* rpn, const variable** variables, int variables_count)
+double get_RPN_result(const queue* rpn, variable** variables, int variables_count)
 {
 	queue* cur_rpn = queue_clone(rpn);
 	stack* variables_stack = stack_alloc();
@@ -199,10 +209,14 @@ double get_RPN_result(const queue* rpn, const variable** variables, int variable
 			//printf_s("\n%s = %lf\n", variables[index]->name, variables[index]->value);
 			break;
 
-		case Function:  // Получаем данные функции, забираем из стека нужное число параметров и 
+		case Operator: case Function: case Prefix_function:  
+			// Получаем данные функции, забираем из стека нужное число параметров и 
 			// отправляем результат неизвестной функции в стек
-			function_index = get_mathfunction_index(cur_token->name);
-			if (function_index == -1) break;
+			function_index = get_mathfunction_index(cur_token);
+			if (function_index == -1) {
+				printf_s("%s - данной функции нет в программе, обратитесь к разработчику, желательно с пистолетом в руке", cur_token->name);
+				break;
+			}
 			cur_function = math_fns[function_index];
 
 			parameters = (double*)malloc(cur_function.parameters_count * sizeof(double));

@@ -1,11 +1,11 @@
 #include "MathFunctions.h"
 #include <string.h>
 
-int get_mathfunction_index(char* name)
+int get_mathfunction_index(token* t)
 {
 	for (int i = 0; i < MATH_FUNCTIONS_COUNT; ++i)
 	{
-		if (strcmp(name, math_fns[i].name) == 0) return i;
+		if (t->type == math_fns[i].type && strcmp(t->name, math_fns[i].name) == 0) return i;
 	}
 	return -1;
 }
@@ -35,6 +35,10 @@ double plus(double a, double b)
 double minus(double a, double b)
 {
 	return a - b;
+}
+double minus_prefix(double a)
+{
+	return -a;
 }
 double division(double a, double b)
 {

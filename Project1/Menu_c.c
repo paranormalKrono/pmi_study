@@ -2,14 +2,14 @@
 #include <locale.h>
 #include <Windows.h>
 #include <direct.h>
-#include "Menu.h"
+#include "Menu_c.h"
 #include "MathPMI_Examples.h"
 
 int choice_menu(HANDLE h, CONSOLE_CURSOR_INFO cci, const char* sections_text[], const int sections_count);
 void clear_all();
 void set_console_color(HANDLE h, ConsoleColor text, ConsoleColor background);
 
-void menu() 
+void menu_c() 
 {
 	setlocale(LC_ALL, "Rus");
 	SetConsoleCP(1251);
@@ -48,6 +48,7 @@ void menu()
 			bigint_dbg
 		};
 		int choice = choice_menu(h, cci, start_menu_texts, start_menu_sections_count);
+		if (choice == start_menu_sections_count-1) break;
 		methods[choice]();
 
 		printf_s("%s", "Вы хотите продолжить? Y/N (Да/Нет)\n");
@@ -57,10 +58,14 @@ void menu()
 	} while (answer == 'Y');
 
 
-	printf("__КОНЕЦ_ВЫПОЛНЕНИЯ__\n");
+	printf_s("__КОНЕЦ_ВЫПОЛНЕНИЯ__\n");
 }
 
-
+char* file_choice_menu_stdir()
+{
+	char* path = "WorkFiles/";
+	return file_choice_menu(path);
+}
 
 char* file_choice_menu(char* directory_path)
 {

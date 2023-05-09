@@ -8,6 +8,6 @@
 
 queue* get_Reverse_Polish_Notation(char* str);
 
-double get_RPN_result(const queue * rpn, const variable** variables, int variables_count);
+double get_RPN_result(const queue * rpn, variable** variables, int variables_count);
 
 #endif // _SHUNTING_YARD_H_
