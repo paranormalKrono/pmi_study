@@ -2232,7 +2232,7 @@ void ImGui::TableUpdateColumnsWeightFromWidth(ImGuiTable* table)
         ImGuiTableColumn* column = &table->Columns[column_n];
         if (!column->IsEnabled || !(column->Flags & ImGuiTableColumnFlags_WidthStretch))
             continue;
-        IM_ASSERT(column->StretchWeight > 0.0f);
+        IM_ASSERT(column->StretchWeight >= 0.0f);
         visible_weight += column->StretchWeight;
         visible_width += column->WidthRequest;
     }

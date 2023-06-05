@@ -1,18 +1,18 @@
 #include "Application.h"
+#include <clocale>
 
 extern "C"
 {
 #include "Menu_c.h"
-#include <clocale>
 }
 
 
+#pragma execution_character_set("utf-8")
 
 
 namespace MyApp
 {
 
-	void console_init();
 	void concole_clear();
 	int console_main(); 
 	
@@ -21,7 +21,7 @@ namespace MyApp
 
 	void Initialisation()
 	{
-		console_init();
+		setlocale(LC_ALL, "Russian");
 	}
 
 	void RenderUI()
@@ -36,14 +36,19 @@ namespace MyApp
 
 		ImGui::Begin("Main window"); 
 
-		if (ImGui::Button("Open DemoWindow"))
-			show_demo_window = !show_demo_window;
+		if (ImGui::TreeNode("Отладка"))
+		{
+			if (ImGui::Button("Открыть демо"))
+				show_demo_window = !show_demo_window;
 
-		if (ImGui::Button("Work with console"))
-			console_main();
+			if (ImGui::Button("Работать с консолью"))
+				console_main();
 
-		if (ImGui::Button("Clear console"))
-			concole_clear();
+			if (ImGui::Button("Очистить консоль"))
+				concole_clear();
+
+			ImGui::TreePop();
+		}
 
 		ShowMenu();
 
@@ -52,13 +57,6 @@ namespace MyApp
 	}
 
 	#pragma region console
-
-	void console_init()
-	{
-		setlocale(LC_ALL, "Rus");
-		SetConsoleCP(1251);
-		SetConsoleOutputCP(1251);
-	}
 
 	void concole_clear()
 	{

@@ -8,8 +8,9 @@
 #include "Main.h"
 
 #include <stdio.h>
+#include <locale.h>
 
-#define NUMBER_SIZE 25
+#define NUMBER_SIZE 32
 
 int get_operation_priority(const char op);
 char* parse_number(const char** cur_str);
@@ -36,7 +37,7 @@ void show_queue(queue* q)
 	printf("\n");
 }
 
-queue* get_Reverse_Polish_Notation(char* str)
+queue* get_Reverse_Polish_Notation(const char* str)
 {
 	char* cur_str_index = str, *name_start_index = str;
 	token* token_temp, ** token_void;
@@ -188,18 +189,20 @@ double get_RPN_result(const queue* rpn, variable** variables, int variables_coun
 {
 	queue* cur_rpn = queue_clone(rpn);
 	stack* variables_stack = stack_alloc();
-	token* cur_token, *n1 = token_alloc(), *n2 = token_alloc();
+	token* cur_token;
 	variable* cur_variable;
 	math_function cur_function;
 	int function_index;
 	double res = 0, cur_res;
 	double* parameters;
+
+	_locale_t lt = _create_locale(LC_ALL, "en-US");
 	while (queue_pop(cur_rpn, &cur_token) && cur_token) 
 	{
 		switch (cur_token->type)
 		{
 		case Number: 
-			double num = atof(cur_token->name);
+			double num = _atof_l(cur_token->name, lt);
 			stack_push(variables_stack, variable_init(cur_token->name, num));
 			break;
 
@@ -214,7 +217,7 @@ double get_RPN_result(const queue* rpn, variable** variables, int variables_coun
 			// отправляем результат неизвестной функции в стек
 			function_index = get_mathfunction_index(cur_token);
 			if (function_index == -1) {
-				printf_s("%s - данной функции нет в программе, обратитесь к разработчику, желательно с пистолетом в руке", cur_token->name);
+				//printf_s("%s - данной функции нет в программе, обратитесь к разработчику, желательно с пистолетом в руке\n", cur_token->name);
 				break;
 			}
 			cur_function = math_fns[function_index];
@@ -222,27 +225,31 @@ double get_RPN_result(const queue* rpn, variable** variables, int variables_coun
 			parameters = (double*)malloc(cur_function.parameters_count * sizeof(double));
 			if (!parameters) break;
 
-			for (int i = 0; i < cur_function.parameters_count; ++i)
+			for (int i = 0; i < (int)cur_function.parameters_count; ++i)
 			{
 				stack_pop(variables_stack, &cur_variable);
 				parameters[cur_function.parameters_count - 1 - i] = cur_variable->value;
 			}
 			cur_res = get_mathfunction_result(cur_function, parameters);
 
-			//printf_s("%s(%lf", cur_function.name, parameters[0]);
-			//for (int i = 1; i < cur_function.parameters_count; ++i) printf_s(", %lf", parameters[i]);
-			//printf_s(") = %lf\n", cur_res);
+			/*printf_s("%s(%.64lf", cur_function.name, parameters[0]);
+			for (int i = 1; i < cur_function.parameters_count; ++i) printf_s(" %.64lf", parameters[i]);
+			printf_s(") = %.64lf\n", cur_res);*/
 
 			free(parameters);
 
 			stack_push(variables_stack, variable_init(NULL, cur_res));
-			res = cur_res;
 			break;
 
 		default:
 			stack_push(variables_stack, cur_token);
 			break;
 		}
+	}
+	res = 0;
+	while (stack_pop(variables_stack, &cur_variable)) 
+	{
+		res += cur_variable->value;
 	}
 
 	stack_free(variables_stack);

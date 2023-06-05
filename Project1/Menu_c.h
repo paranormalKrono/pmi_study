@@ -22,7 +22,6 @@ typedef enum
 	White = 15
 } ConsoleColor;
 
-
 void menu_c();
 char* file_choice_menu_stdir();
 char* file_choice_menu(char* directory_path);

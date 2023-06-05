@@ -6,7 +6,7 @@
 
 // Алгоритм сортировочной станции
 
-queue* get_Reverse_Polish_Notation(char* str);
+queue* get_Reverse_Polish_Notation(const char* str);
 
 double get_RPN_result(const queue * rpn, variable** variables, int variables_count);
 

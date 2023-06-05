@@ -59,11 +59,11 @@ int main(void)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1600, 1080, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(2000, 1280, "Application", nullptr, nullptr);
     if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
+    glfwSwapInterval(2); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -96,7 +96,7 @@ int main(void)
     ImGui_ImplOpenGL3_Init(glsl_version);
 
 
-    io.Fonts->AddFontFromFileTTF("./fonts/CascadiaCode_VTT.ttf", 24.0f, nullptr, io.Fonts->GetGlyphRangesCyrillic());
+    io.Fonts->AddFontFromFileTTF("./fonts/CascadiaCode_VTT.ttf", 34.0f, nullptr, io.Fonts->GetGlyphRangesCyrillic());
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
 

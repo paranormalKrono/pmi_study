@@ -1,7 +1,179 @@
 ///*
 /*
-* 
-* 
+
+
+
+			printf_s("\n\nFounded %d arguments by secant method\n", solutions_count);
+			double* xss = non_linear_equation(&solutions_count, A, B, secant_divisions_count, secant_error, secant, variables, 0, 1, wnx_rpn);
+			if (solutions_count > arguments_count) printf_s("[ERROR]");
+			if (solutions_count <= arguments_count)
+			{
+				for (int i = 0; i < solutions_count; ++i)
+					printf_s("\t%+.64lf\n", xss[i]);
+			}
+			else
+			{
+				for (int i = 0; i < arguments_count; ++i)
+					printf_s("\t%+.64lf\n", xss[i]);
+			}
+
+	double get_legender_orthogonal_polinom_value(double x, int n)
+	{
+		if (n >= 2) return (2 * n - 1) / n * get_legender_orthogonal_polinom_value(x, n - 1) - (n - 1) / n * get_legender_orthogonal_polinom_value(x, n - 2);
+		else if (n == 1) return x;
+		else return 1;
+	}
+
+		if (ImGui::Button("Вычислить моменты весовой функции с заданным числом делений\n(зависит от весовой функции, промежутка и числа делений)"))
+		{
+			//moments[i] = get_integration_compound_middle_rectange(f, variables, 0, 1, fixed_A, fixed_B, divisions_count);
+			// Вычисление моментов по СКФ средних прямоугольников, оптимизированное
+			double h = (B - A) / (double)divisions_count;
+
+			for (int i = 0; i < arguments_count * 2; ++i)
+				moments[i] = 0;
+
+			double weight;
+			for (int i = 0; i < divisions_count; ++i)
+			{
+				variables[0]->value = A + h * ((double)i + 0.5);
+				weight = get_RPN_result(weight_function_rpn, variables, 1);
+
+				for (int cur_moment = 0; cur_moment < arguments_count * 2; ++cur_moment)
+					moments[cur_moment] += weight * pow(variables[0]->value, cur_moment);
+			}
+
+			printf_s("\n\n-----| Moments calculated |-----\n");
+			for (int i = 0; i < arguments_count * 2; ++i)
+			{
+				moments[i] *= h;
+				printf_s("\t%d]\t%.64lf\n", i, moments[i]);
+			}
+			printf_s("2n-1 = %d\n", arguments_count * 2 - 1);
+
+
+		}
+
+
+
+			//double* xss = non_linear_equation(&solutions_count, A, B, secant_divisions_count, secant_error, secant, variables, 0, 1, wnx_rpn);
+			//printf_s("\nFounded %d arguments by secant method\n", solutions_count);
+			//if (solutions_count > arguments_count) printf_s("[ERROR]");
+			//if (solutions_count <= arguments_count)
+			//{
+			//	for (int i = 0; i < solutions_count; ++i)
+			//		printf_s("\t%+.64lf\n", xss[i]);
+			//}
+			//else
+			//{
+			//	for (int i = 0; i < arguments_count; ++i)
+			//		printf_s("\t%+.64lf\n", xss[i]);
+			//}
+
+
+//"ln(cos(x)+x*(2+pow(x,-x)))",  
+			//"(1-x+2*pow(x,x)-x*ln(x)-pow(x,x)*sin(x))/(x+2*pow(x,1+x)+pow(x,x)*cos(x))"
+
+
+char* function2_view();
+double calculate_function2_result(double x);
+double calculate_f2_deriative_result(double x);
+double calculate_f2_deriative2_result(double x);
+
+
+void nonlinear_equation_dbg();
+
+
+
+#include "computational_mathematics.h"
+#include <stdio.h>
+#include <math.h>
+#include "Time_Debug.h"
+#include "dbg_computational_mathematics.h"
+
+char* function2_view() { return "(sin(x) + cos^2(x)) / (x^2 + x)"; }
+
+double calculate_function2_result(double x)
+{
+	return (sin(x) + pow(cos(x), 2)) / (pow(x, 2) + x);
+}
+
+double calculate_f2_deriative_result(double x)
+{
+	// ((cos x-2sin(x)cos x)(x^2+x)-(2x+1)(sin x+cos^2x))/(x^2+x)^2
+	double s = sin(x), c = cos(x), te = pow(x, 2) + x;
+	return ((c - 2 * s * c) * te - (2 * x + 1) * (s + pow(c, 2))) / pow(te, 2);
+}
+
+double calculate_f2_deriative2_result(double x)
+{
+	// Сделано при помощи калькулятора и текстовых замен
+	//
+	//((2*x^4+4*x^3+2*x^2)*sin(x)^2+((8*x^3+12*x^2+4*x)*cos(x)-x^4-2*x^3+5*x^2+6*x+2)*sin(x)+((-2*x^4)-4*x^3+4*x^2+6*x+2)*cos(x)^2+((-4*x^3)-6*x^2-2*x)*cos(x))/(x^6+3*x^5+3*x^4+x^3)
+	return ((2 * pow(x, 4) + 4 * pow(x, 3) + 2 * pow(x, 2)) * pow(sin(x), 2) + ((8 * pow(x, 3) + 12 * pow(x, 2) + 4 * x) * cos(x) - pow(x, 4) - 2 * pow(x, 3) + 5 * pow(x, 2) + 6 * x + 2) * sin(x) +
+		((-2 * pow(x, 4)) - 4 * pow(x, 3) + 4 * pow(x, 2) + 6 * x + 2) * pow(cos(x), 2) + ((-4 * pow(x, 3)) - 6 * pow(x, 2) - 2 * x) * cos(x)) / (pow(x, 6) + 3 * pow(x, 5) + 3 * pow(x, 4) + pow(x, 3));
+}
+
+void nonlinear_equation_dbg()
+{
+	const int text_count = 4;
+	const char* Text[] = {
+		"Метод секущих",
+		"Метод бисекций",
+		"Метод Ньютона",
+		"Модифицированный метод Ньютона"
+	};
+
+	printf_s("Функция f(x) = ");
+	printf_s(function2_view());
+	printf_s("\n");
+
+	double A, B, eps;
+	int segments_count;
+
+	printf_s("Вводите числа в виде 1 или 0,1\n");
+	do
+	{
+		printf_s("Введите левую и правую границу отрезка поиска решения: ");
+		scanf_s("%lf%lf", &A, &B);
+	} while (B - A <= 0);
+
+	do
+	{
+		printf_s("Введите количество разделений отрезка: ");
+		scanf_s("%d", &segments_count);
+	} while (segments_count <= 0);
+
+	eps = input_epsilon();
+
+	printf_s("Выберите метод поиска решения: ");
+	int choice = choice_menu_h(Text, text_count);
+	finding_roots_method frm = (finding_roots_method)choice;
+
+	int solutions_count = 0;
+	startTimer();
+	double* solutions = non_linear_equation(&solutions_count, A, B, segments_count, eps, frm, calculate_function2_result, calculate_f2_deriative_result, calculate_f2_deriative2_result);
+	stopTimer();
+
+	printf_s("\nВремя поиска решений - %lf\n", getTimerClock());
+	printf_s("\nОтвет:\nКоличество решений - %d\n", solutions_count);
+	print_solutions(solutions, solutions_count);
+}
+
+
+
+
+
+			values_array = (double**)realloc(values_array, sizeof(double*) * function_count);
+
+			for (int i = 0; i < fixed_function_count; ++i)
+				values_array[i] = (double*)realloc(values_array[i], sizeof(double) * new_pairs_count);
+			for (int i = fixed_function_count; i < function_count; ++i)
+				values_array[i] = (double*)malloc(sizeof(double) * new_pairs_count);
+
+			arguments_array = (double*)realloc(arguments_array, sizeof(double) * new_pairs_count);
+
+
 
 		if (ImGui::Button("Получить информацию из файла calculation_functions.txt"))
 		{

@@ -9,7 +9,7 @@ void computational_mathematics_dbg()
 {
 	printf_s("__COMPUTATIONAL_MATHEMATICS_DEBUG__\n");
 
-	const int text_count = 4;
+	const int text_count = 3;
 	const char* Text[] = {
 		"Нахождение производных таблично-заданной функции по формулам численного дифференцирования",
 		"Задача обратного интерполирования",
@@ -19,8 +19,7 @@ void computational_mathematics_dbg()
 	const void (*methods[])() = {
 		numerical_differentiation_dbg,
 		reverse_algebraic_interpolation_dbg,
-		algebraic_interpolation_dbg,
-		nonlinear_equation_dbg
+		algebraic_interpolation_dbg
 	};
 
 	printf_s("Выберите, что нужно сделать: ");

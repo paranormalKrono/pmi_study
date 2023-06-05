@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <implot.h>
 #include <string>
+#include <vector>
 
 
 extern "C"
@@ -16,13 +17,18 @@ extern "C"
 
 namespace MyApp 
 {
+
 	void Initialisation();
 	void RenderUI();
 
 	void ShowMenu();
 	void ComputationalMathematics();
+	void DifferentialMathematics();
 
-	void IntegrationMenu(int antiderivatives_count, double end, double begin, variable** variables, queue** function_rpns, int fixed_function_count, int* main_function_index);
+	void IntegrationMenu(double end, double begin,
+		variable** variables, std::vector<queue*> function_rpns, std::vector<std::string> function_names, int* main_function_index);
+
+	void CauchyMenu(double yx0, variable** variables, queue* function_rpn);
 }
 
 #endif // _APPLICATION_H_
