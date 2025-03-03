@@ -1,3 +1,5 @@
+#pragma once
+
 struct queue;
 typedef struct queue queue;
 

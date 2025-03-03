@@ -175,7 +175,7 @@ unsigned char* parse_number(const char** cur_str)
 }
 
 
-int get_vv_index(char* s, const variable** variables, int count)
+int get_variable_index_by_name(char* s, const variable** variables, int count)
 {
 	for (int i = 0; i < count; ++i)
 		if (!strcmp(s, variables[i]->name))
@@ -207,9 +207,12 @@ double get_RPN_result(const queue* rpn, variable** variables, int variables_coun
 			break;
 
 		case Variable:
-			int index = get_vv_index(cur_token->name, variables, variables_count);
+			int index = get_variable_index_by_name(cur_token->name, variables, variables_count); 
+			if (index == -1) 
+				printf_s("Переменная не найдена в списке: %s", cur_token->name);/*
+			else
+				printf_s("\n%s = %lf\n", variables[index]->name, variables[index]->value);*/
 			stack_push(variables_stack, variables[index]);
-			//printf_s("\n%s = %lf\n", variables[index]->name, variables[index]->value);
 			break;
 
 		case Operator: case Function: case Prefix_function:  
@@ -217,7 +220,7 @@ double get_RPN_result(const queue* rpn, variable** variables, int variables_coun
 			// отправляем результат неизвестной функции в стек
 			function_index = get_mathfunction_index(cur_token);
 			if (function_index == -1) {
-				//printf_s("%s - данной функции нет в программе, обратитесь к разработчику, желательно с пистолетом в руке\n", cur_token->name);
+				printf_s("%s - данной функции нет в программе, обратитесь к разработчику, желательно с пистолетом в руке\n", cur_token->name);
 				break;
 			}
 			cur_function = math_fns[function_index];
@@ -232,9 +235,9 @@ double get_RPN_result(const queue* rpn, variable** variables, int variables_coun
 			}
 			cur_res = get_mathfunction_result(cur_function, parameters);
 
-			/*printf_s("%s(%.64lf", cur_function.name, parameters[0]);
-			for (int i = 1; i < cur_function.parameters_count; ++i) printf_s(" %.64lf", parameters[i]);
-			printf_s(") = %.64lf\n", cur_res);*/
+			/*printf_s("%s(%.32lf", cur_function.name, parameters[0]);
+			for (int i = 1; i < cur_function.parameters_count; ++i) printf_s(" %.32lf", parameters[i]);
+			printf_s(") = %.32lf\n", cur_res);*/
 
 			free(parameters);
 

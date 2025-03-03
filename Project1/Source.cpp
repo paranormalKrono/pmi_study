@@ -3,6 +3,7 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -13,7 +14,12 @@
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
-#include "Application.h"
+#include "MainApp.h"
+#include <clocale>
+extern "C"
+{
+#include "Menu_c.h"
+}
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -59,7 +65,7 @@ int main(void)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(2000, 1280, "Application", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1600, 1100, "Application", nullptr, nullptr);
     if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);
@@ -76,8 +82,6 @@ int main(void)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-    //io.ConfigViewportsNoAutoMerge = true;
-    //io.ConfigViewportsNoTaskBarIcon = true;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -96,14 +100,16 @@ int main(void)
     ImGui_ImplOpenGL3_Init(glsl_version);
 
 
-    io.Fonts->AddFontFromFileTTF("./fonts/CascadiaCode_VTT.ttf", 34.0f, nullptr, io.Fonts->GetGlyphRangesCyrillic());
+    io.Fonts->AddFontFromFileTTF("./fonts/CascadiaCode_VTT.ttf", 28.0f, nullptr, io.Fonts->GetGlyphRangesCyrillic());
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    MyApp::Initialisation();
+
+    setlocale(LC_ALL, "Russian");
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -121,7 +127,8 @@ int main(void)
 
 
         // My code
-        MyApp::RenderUI();
+        MainMenu();
+
 
         // Rendering
         ImGui::Render();
@@ -149,9 +156,7 @@ int main(void)
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
-
     ImPlot::DestroyContext();
-
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);

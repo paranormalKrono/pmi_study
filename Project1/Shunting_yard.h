@@ -1,5 +1,7 @@
 #ifndef	_SHUNTING_YARD_H_
 #define	_SHUNTING_YARD_H_
+#pragma once
+
 #include "Lessons/sq/stack_list.h"
 #include "Lessons/sq/queue_list.h"
 #include "variables.h"

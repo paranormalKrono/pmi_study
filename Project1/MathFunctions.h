@@ -3,7 +3,7 @@
 #include "MathPMI_Term1.h"
 #include <math.h>
 #include "Tokens.h"
-#define MATH_FUNCTIONS_COUNT 15
+#define MATH_FUNCTIONS_COUNT 16
 
 typedef struct math_function
 {
@@ -34,7 +34,8 @@ static math_function math_fns[MATH_FUNCTIONS_COUNT] = {
 	{Prefix_function, "sin", 1, &sin},
 	{Prefix_function, "cos", 1, &cos},
 	{Prefix_function, "abs", 1, &fabs},
-	{Prefix_function, "sqrt", 1, &sqrt}
+	{Prefix_function, "sqrt", 1, &sqrt},
+	{Prefix_function, "tg", 1, &tan}
 	//{"!", 1, &dfa_implement},
 	//{"^", 2, &dfa_intersection},
 	//{"|", 2, &dfa_union},

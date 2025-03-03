@@ -1,5 +1,697 @@
-///*
-/*
+п»ї///*
+/* 
+* 
+
+		for (auto& node : m_Nodes)
+		{
+			if (node.Type != NodeType::Tree)
+				continue;
+
+			const float rounding = 5.0f;
+			const float padding = 12.0f;
+
+			const auto pinBackground = ed::GetStyle().Colors[ed::StyleColor_NodeBg];
+
+			ed::PushStyleColor(ed::StyleColor_NodeBg, ImColor(128, 128, 128, 200));
+			ed::PushStyleColor(ed::StyleColor_NodeBorder, ImColor(32, 32, 32, 200));
+			ed::PushStyleColor(ed::StyleColor_PinRect, ImColor(60, 180, 255, 150));
+			ed::PushStyleColor(ed::StyleColor_PinRectBorder, ImColor(60, 180, 255, 150));
+
+			ed::PushStyleVar(ed::StyleVar_NodePadding, ImVec4(0, 0, 0, 0));
+			ed::PushStyleVar(ed::StyleVar_NodeRounding, rounding);
+			ed::PushStyleVar(ed::StyleVar_SourceDirection, ImVec2(0.0f, 1.0f));
+			ed::PushStyleVar(ed::StyleVar_TargetDirection, ImVec2(0.0f, -1.0f));
+			ed::PushStyleVar(ed::StyleVar_LinkStrength, 0.0f);
+			ed::PushStyleVar(ed::StyleVar_PinBorderWidth, 1.0f);
+			ed::PushStyleVar(ed::StyleVar_PinRadius, 5.0f);
+			ed::BeginNode(node.ID);
+
+			ImGui::BeginVertical(node.ID.AsPointer());
+			ImGui::BeginHorizontal("inputs");
+			ImGui::Spring(0, padding * 2);
+
+			ImRect inputsRect;
+			int inputAlpha = 200;
+			if (!node.Inputs.empty())
+			{
+				auto& pin = node.Inputs[0];
+				ImGui::Dummy(ImVec2(0, padding));
+				ImGui::Spring(1, 0);
+				inputsRect = ImGui_GetItemRect();
+
+				ed::PushStyleVar(ed::StyleVar_PinArrowSize, 10.0f);
+				ed::PushStyleVar(ed::StyleVar_PinArrowWidth, 10.0f);
+
+				ed::PushStyleVar(ed::StyleVar_PinCorners, ImDrawFlags_RoundCornersBottom);
+
+				ed::BeginPin(pin.ID, ed::PinKind::Input);
+				ed::PinPivotRect(inputsRect.GetTL(), inputsRect.GetBR());
+				ed::PinRect(inputsRect.GetTL(), inputsRect.GetBR());
+				ed::EndPin();
+				ed::PopStyleVar(3);
+
+				if (newLinkPin && !CanCreateLink(newLinkPin, &pin) && &pin != newLinkPin)
+					inputAlpha = (int)(255 * ImGui::GetStyle().Alpha * (48.0f / 255.0f));
+			}
+			else
+				ImGui::Dummy(ImVec2(0, padding));
+
+			ImGui::Spring(0, padding * 2);
+			ImGui::EndHorizontal();
+
+			ImGui::BeginHorizontal("content_frame");
+			ImGui::Spring(1, padding);
+
+			ImGui::BeginVertical("content", ImVec2(0.0f, 0.0f));
+			ImGui::Dummy(ImVec2(160, 0));
+			ImGui::Spring(1);
+			ImGui::TextUnformatted(node.Name.c_str());
+			ImGui::Spring(1);
+			ImGui::EndVertical();
+			auto contentRect = ImGui_GetItemRect();
+
+			ImGui::Spring(1, padding);
+			ImGui::EndHorizontal();
+
+			ImGui::BeginHorizontal("outputs");
+			ImGui::Spring(0, padding * 2);
+
+			ImRect outputsRect;
+			int outputAlpha = 200;
+			if (!node.Outputs.empty())
+			{
+				auto& pin = node.Outputs[0];
+				ImGui::Dummy(ImVec2(0, padding));
+				ImGui::Spring(1, 0);
+				outputsRect = ImGui_GetItemRect();
+
+				ed::PushStyleVar(ed::StyleVar_PinCorners, ImDrawFlags_RoundCornersTop);
+
+				ed::BeginPin(pin.ID, ed::PinKind::Output);
+				ed::PinPivotRect(outputsRect.GetTL(), outputsRect.GetBR());
+				ed::PinRect(outputsRect.GetTL(), outputsRect.GetBR());
+				ed::EndPin();
+				ed::PopStyleVar();
+
+				if (newLinkPin && !CanCreateLink(newLinkPin, &pin) && &pin != newLinkPin)
+					outputAlpha = (int)(255 * ImGui::GetStyle().Alpha * (48.0f / 255.0f));
+			}
+			else
+				ImGui::Dummy(ImVec2(0, padding));
+
+			ImGui::Spring(0, padding * 2);
+			ImGui::EndHorizontal();
+
+			ImGui::EndVertical();
+
+			ed::EndNode();
+			ed::PopStyleVar(7);
+			ed::PopStyleColor(4);
+
+			auto drawList = ed::GetNodeBackgroundDrawList(node.ID);
+
+			//const auto fringeScale = ImGui::GetStyle().AntiAliasFringeScale;
+			//const auto unitSize    = 1.0f / fringeScale;
+
+			//const auto ImDrawList_AddRect = [](ImDrawList* drawList, const ImVec2& a, const ImVec2& b, ImU32 col, float rounding, int rounding_corners, float thickness)
+			//{
+			//    if ((col >> 24) == 0)
+			//        return;
+			//    drawList->PathRect(a, b, rounding, rounding_corners);
+			//    drawList->PathStroke(col, true, thickness);
+			//};
+
+			const auto    topRoundCornersFlags = ImDrawFlags_RoundCornersTop;
+			const auto bottomRoundCornersFlags = ImDrawFlags_RoundCornersBottom;
+
+			drawList->AddRectFilled(inputsRect.GetTL() + ImVec2(0, 1), inputsRect.GetBR(),
+				IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), inputAlpha), 4.0f, bottomRoundCornersFlags);
+			//ImGui::PushStyleVar(ImGuiStyleVar_AntiAliasFringeScale, 1.0f);
+			drawList->AddRect(inputsRect.GetTL() + ImVec2(0, 1), inputsRect.GetBR(),
+				IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), inputAlpha), 4.0f, bottomRoundCornersFlags);
+			//ImGui::PopStyleVar();
+			drawList->AddRectFilled(outputsRect.GetTL(), outputsRect.GetBR() - ImVec2(0, 1),
+				IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), outputAlpha), 4.0f, topRoundCornersFlags);
+			//ImGui::PushStyleVar(ImGuiStyleVar_AntiAliasFringeScale, 1.0f);
+			drawList->AddRect(outputsRect.GetTL(), outputsRect.GetBR() - ImVec2(0, 1),
+				IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), outputAlpha), 4.0f, topRoundCornersFlags);
+			//ImGui::PopStyleVar();
+			drawList->AddRectFilled(contentRect.GetTL(), contentRect.GetBR(), IM_COL32(24, 64, 128, 200), 0.0f);
+			//ImGui::PushStyleVar(ImGuiStyleVar_AntiAliasFringeScale, 1.0f);
+			drawList->AddRect(
+				contentRect.GetTL(),
+				contentRect.GetBR(),
+				IM_COL32(48, 128, 255, 100), 0.0f);
+			//ImGui::PopStyleVar();
+		}
+
+
+		for (auto& node : m_Nodes)
+		{
+			if (node.Type != NodeType::Houdini)
+				continue;
+
+			const float rounding = 10.0f;
+			const float padding = 12.0f;
+
+
+			ed::PushStyleColor(ed::StyleColor_NodeBg, ImColor(229, 229, 229, 200));
+			ed::PushStyleColor(ed::StyleColor_NodeBorder, ImColor(125, 125, 125, 200));
+			ed::PushStyleColor(ed::StyleColor_PinRect, ImColor(229, 229, 229, 60));
+			ed::PushStyleColor(ed::StyleColor_PinRectBorder, ImColor(125, 125, 125, 60));
+
+			const auto pinBackground = ed::GetStyle().Colors[ed::StyleColor_NodeBg];
+
+			ed::PushStyleVar(ed::StyleVar_NodePadding, ImVec4(0, 0, 0, 0));
+			ed::PushStyleVar(ed::StyleVar_NodeRounding, rounding);
+			ed::PushStyleVar(ed::StyleVar_SourceDirection, ImVec2(0.0f, 1.0f));
+			ed::PushStyleVar(ed::StyleVar_TargetDirection, ImVec2(0.0f, -1.0f));
+			ed::PushStyleVar(ed::StyleVar_LinkStrength, 0.0f);
+			ed::PushStyleVar(ed::StyleVar_PinBorderWidth, 1.0f);
+			ed::PushStyleVar(ed::StyleVar_PinRadius, 6.0f);
+			ed::BeginNode(node.ID);
+
+			ImGui::BeginVertical(node.ID.AsPointer());
+			if (!node.Inputs.empty())
+			{
+				ImGui::BeginHorizontal("inputs");
+				ImGui::Spring(1, 0);
+
+				ImRect inputsRect;
+				int inputAlpha = 200;
+				for (auto& pin : node.Inputs)
+				{
+					ImGui::Dummy(ImVec2(padding, padding));
+					inputsRect = ImGui_GetItemRect();
+					ImGui::Spring(1, 0);
+					inputsRect.Min.y -= padding;
+					inputsRect.Max.y -= padding;
+
+					const auto allRoundCornersFlags = ImDrawFlags_RoundCornersAll;
+
+					//ed::PushStyleVar(ed::StyleVar_PinArrowSize, 10.0f);
+					//ed::PushStyleVar(ed::StyleVar_PinArrowWidth, 10.0f);
+					ed::PushStyleVar(ed::StyleVar_PinCorners, allRoundCornersFlags);
+
+					ed::BeginPin(pin.ID, ed::PinKind::Input);
+					ed::PinPivotRect(inputsRect.GetCenter(), inputsRect.GetCenter());
+					ed::PinRect(inputsRect.GetTL(), inputsRect.GetBR());
+					ed::EndPin();
+					//ed::PopStyleVar(3);
+					ed::PopStyleVar(1);
+
+					auto drawList = ImGui::GetWindowDrawList();
+					drawList->AddRectFilled(inputsRect.GetTL(), inputsRect.GetBR(),
+						IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), inputAlpha), 4.0f, allRoundCornersFlags);
+					drawList->AddRect(inputsRect.GetTL(), inputsRect.GetBR(),
+						IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), inputAlpha), 4.0f, allRoundCornersFlags);
+
+					if (newLinkPin && !CanCreateLink(newLinkPin, &pin) && &pin != newLinkPin)
+						inputAlpha = (int)(255 * ImGui::GetStyle().Alpha * (48.0f / 255.0f));
+				}
+
+				ImGui::Spring(1, 0);
+				ImGui::EndHorizontal();
+			}
+
+			ImGui::BeginHorizontal("content_frame");
+			ImGui::Spring(1, padding);
+
+			ImGui::BeginVertical("content", ImVec2(0.0f, 0.0f));
+			ImGui::Dummy(ImVec2(160, 0));
+			ImGui::Spring(1);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::TextUnformatted(node.Name.c_str());
+			ImGui::PopStyleColor();
+			ImGui::Spring(1);
+			ImGui::EndVertical();
+			auto contentRect = ImGui_GetItemRect();
+
+			ImGui::Spring(1, padding);
+			ImGui::EndHorizontal();
+
+			if (!node.Outputs.empty())
+			{
+				ImGui::BeginHorizontal("outputs");
+				ImGui::Spring(1, 0);
+
+				ImRect outputsRect;
+				int outputAlpha = 200;
+				for (auto& pin : node.Outputs)
+				{
+					ImGui::Dummy(ImVec2(padding, padding));
+					outputsRect = ImGui_GetItemRect();
+					ImGui::Spring(1, 0);
+					outputsRect.Min.y += padding;
+					outputsRect.Max.y += padding;
+
+					const auto allRoundCornersFlags = ImDrawFlags_RoundCornersAll;
+					const auto topRoundCornersFlags = ImDrawFlags_RoundCornersTop;
+
+					ed::PushStyleVar(ed::StyleVar_PinCorners, topRoundCornersFlags);
+					ed::BeginPin(pin.ID, ed::PinKind::Output);
+					ed::PinPivotRect(outputsRect.GetCenter(), outputsRect.GetCenter());
+					ed::PinRect(outputsRect.GetTL(), outputsRect.GetBR());
+					ed::EndPin();
+					ed::PopStyleVar();
+
+
+					auto drawList = ImGui::GetWindowDrawList();
+					drawList->AddRectFilled(outputsRect.GetTL(), outputsRect.GetBR(),
+						IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), outputAlpha), 4.0f, allRoundCornersFlags);
+					drawList->AddRect(outputsRect.GetTL(), outputsRect.GetBR(),
+						IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), outputAlpha), 4.0f, allRoundCornersFlags);
+
+
+					if (newLinkPin && !CanCreateLink(newLinkPin, &pin) && &pin != newLinkPin)
+						outputAlpha = (int)(255 * ImGui::GetStyle().Alpha * (48.0f / 255.0f));
+				}
+
+				ImGui::EndHorizontal();
+			}
+
+			ImGui::EndVertical();
+
+			ed::EndNode();
+			ed::PopStyleVar(7);
+			ed::PopStyleColor(4);
+
+			// auto drawList = ed::GetNodeBackgroundDrawList(node.ID);
+
+			//const auto fringeScale = ImGui::GetStyle().AntiAliasFringeScale;
+			//const auto unitSize    = 1.0f / fringeScale;
+
+			//const auto ImDrawList_AddRect = [](ImDrawList* drawList, const ImVec2& a, const ImVec2& b, ImU32 col, float rounding, int rounding_corners, float thickness)
+			//{
+			//    if ((col >> 24) == 0)
+			//        return;
+			//    drawList->PathRect(a, b, rounding, rounding_corners);
+			//    drawList->PathStroke(col, true, thickness);
+			//};
+
+			//drawList->AddRectFilled(inputsRect.GetTL() + ImVec2(0, 1), inputsRect.GetBR(),
+			//    IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), inputAlpha), 4.0f, 12);
+			//ImGui::PushStyleVar(ImGuiStyleVar_AntiAliasFringeScale, 1.0f);
+			//drawList->AddRect(inputsRect.GetTL() + ImVec2(0, 1), inputsRect.GetBR(),
+			//    IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), inputAlpha), 4.0f, 12);
+			//ImGui::PopStyleVar();
+			//drawList->AddRectFilled(outputsRect.GetTL(), outputsRect.GetBR() - ImVec2(0, 1),
+			//    IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), outputAlpha), 4.0f, 3);
+			////ImGui::PushStyleVar(ImGuiStyleVar_AntiAliasFringeScale, 1.0f);
+			//drawList->AddRect(outputsRect.GetTL(), outputsRect.GetBR() - ImVec2(0, 1),
+			//    IM_COL32((int)(255 * pinBackground.x), (int)(255 * pinBackground.y), (int)(255 * pinBackground.z), outputAlpha), 4.0f, 3);
+			////ImGui::PopStyleVar();
+			//drawList->AddRectFilled(contentRect.GetTL(), contentRect.GetBR(), IM_COL32(24, 64, 128, 200), 0.0f);
+			//ImGui::PushStyleVar(ImGuiStyleVar_AntiAliasFringeScale, 1.0f);
+			//drawList->AddRect(
+			//    contentRect.GetTL(),
+			//    contentRect.GetBR(),
+			//    IM_COL32(48, 128, 255, 100), 0.0f);
+			//ImGui::PopStyleVar();
+		}
+
+//void NodeMenu()
+//{
+//    static bool firstframe = true; // Used to position the nodes on startup
+//
+//    if (firstframe)
+//    {
+//        ed::Config config;
+//        config.SettingsFile = "Simple.json";
+//        m_Editor = ed::CreateEditor(&config);
+//    }
+//
+//    auto& io = ImGui::GetIO();
+//
+//    ed::SetCurrentEditor(m_Editor);
+//
+//
+//    // Node Editor Widget
+//    ed::Begin("Node window", ImVec2(0.0, 0.0f));
+//    int uniqueId = 1;
+//
+//    ed::NodeId nodeMatrix_Id = uniqueId++;
+//    ed::PinId  nodeB_InputPinId1 = uniqueId++;
+//    ed::PinId  nodeB_InputPinId2 = uniqueId++;
+//    ed::PinId  nodeB_OutputPinId = uniqueId++;
+//
+//    if (firstframe)
+//        ed::SetNodePosition(nodeMatrix_Id, ImVec2(210, 60));
+//
+//    ed::BeginNode(nodeMatrix_Id);
+//    ImGui::Text("Matrix");
+//    ImGuiEx_BeginColumn();
+//    ed::BeginPin(nodeB_InputPinId1, ed::PinKind::Input);
+//    ImGui::Text("-> In1");
+//    ed::EndPin();
+//    ed::BeginPin(nodeB_InputPinId2, ed::PinKind::Input);
+//    ImGui::Text("-> In2");
+//    ed::EndPin();
+//    ImGuiEx_NextColumn();
+//    ed::BeginPin(nodeB_OutputPinId, ed::PinKind::Output);
+//    ImGui::Text("Out ->");
+//    ed::EndPin();
+//    ImGuiEx_EndColumn();
+//
+//    // Use AlignTextToFramePadding() to align text baseline to the baseline of framed elements (otherwise a Text+SameLine+Button sequence will have the text a little too high by default)
+//    ImGui::AlignTextToFramePadding();
+//    ImGui::Text("Hold to repeat:");
+//    ImGui::SameLine();
+//
+//    // The input widgets also require you to manually disable the editor shortcuts so the view doesn't fly around.
+//    // (note that this is a per-frame setting, so it disables it for all text boxes.  I left it here so you could find it!)
+//    ed::EnableShortcuts(!io.WantTextInput);
+//
+//    // The input widgets require some guidance on their widths, or else they're very large. (note matching pop at the end).
+//    ImGui::PushItemWidth(400);
+//    static char str1[128] = "";
+//    ImGui::InputTextWithHint("input text (w/ hint)", "enter text here", str1, IM_ARRAYSIZE(str1));
+//
+//    static float f0 = 0.001f;
+//    ImGui::InputFloat("input float", &f0, 0.01f, 1.0f, "%.3f");
+//
+//    static float f1 = 1.00f, f2 = 0.0067f;
+//    ImGui::DragFloat("drag float", &f1, 0.005f);
+//    ImGui::DragFloat("drag small float", &f2, 0.0001f, 0.0f, 0.0f, "%.06f ns");
+//    ImGui::PopItemWidth();
+//
+//    ed::EndNode();
+//
+//
+//
+//    auto popup_id = uniqueId++;
+//    ed::BeginNode(popup_id);
+//
+//
+//    ImGui::Text("Tool Tip & Pop-up Demo");
+//    ed::BeginPin(uniqueId++, ed::PinKind::Input);
+//    ImGui::Text("-> In");
+//    ed::EndPin();
+//    ImGui::SameLine();
+//    ImGui::Dummy(ImVec2(120, 0)); // Hacky magic number to space out the output pin.
+//    ImGui::SameLine();
+//    ed::BeginPin(uniqueId++, ed::PinKind::Output);
+//    ImGui::Text("Out ->");
+//    ed::EndPin();
+//
+//    // Tooltip example
+//    ImGui::Text("Hover over me");
+//    static bool do_tooltip = false;
+//    do_tooltip = ImGui::IsItemHovered() ? true : false;
+//    ImGui::SameLine();
+//    ImGui::Text("- or me");
+//    static bool do_adv_tooltip = false;
+//    do_adv_tooltip = ImGui::IsItemHovered() ? true : false;
+//
+//    ed::EndNode();
+//
+//    if (firstframe) {
+//        ed::SetNodePosition(popup_id, ImVec2(610, 20));
+//    }
+//
+//    // --------------------------------------------------------------------------------------------------
+//    // Deferred Pop-up Section
+//
+//    // This entire section needs to be bounded by Suspend/Resume!  These calls pop us out of "node canvas coordinates"
+//    // and draw the popups in a reasonable screen location.
+//    ed::Suspend();
+//
+//    // Handle the simple tooltip
+//    if (do_tooltip)
+//        ImGui::SetTooltip("I am a tooltip");
+//
+//    // Handle the advanced tooltip
+//    if (do_adv_tooltip) {
+//        ImGui::BeginTooltip();
+//        ImGui::Text("I am a fancy tooltip");
+//        static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
+//        ImGui::PlotLines("Curve", arr, IM_ARRAYSIZE(arr));
+//        ImGui::EndTooltip();
+//    }
+//
+//    ed::Resume();
+//    // End of "Deferred Pop-up section"
+//
+//
+//
+//    // ==================================================================================================
+//    // Link Drawing Section
+//
+//    for (auto& linkInfo : m_Links)
+//        ed::Link(linkInfo.Id, linkInfo.InputId, linkInfo.OutputId);
+//
+//    // ==================================================================================================
+//    // Interaction Handling Section
+//    // This was coppied from BasicInteration.cpp. See that file for commented code.
+//
+//    // Handle creation action ---------------------------------------------------------------------------
+//    if (ed::BeginCreate())
+//    {
+//        ed::PinId inputPinId, outputPinId;
+//        if (ed::QueryNewLink(&inputPinId, &outputPinId))
+//        {
+//            if (inputPinId && outputPinId) // valid
+//            {
+//                if (ed::AcceptNewItem())
+//                {
+//                    m_Links.push_back({ ed::LinkId(m_NextLinkId++), inputPinId, outputPinId });
+//                    ed::Link(m_Links.back().Id, m_Links.back().InputId, m_Links.back().OutputId);
+//                }
+//            }
+//
+//            // You may choose to reject connection between these nodes
+//            // by calling ed::RejectNewItem(). This will allow editor to give
+//            // visual feedback by changing link thickness and color.
+//        }
+//    }
+//    ed::EndCreate();
+//
+//    // Handle deletion action ---------------------------------------------------------------------------
+//    if (ed::BeginDelete())
+//    {
+//        ed::LinkId deletedLinkId;
+//        while (ed::QueryDeletedLink(&deletedLinkId))
+//        {
+//            if (ed::AcceptDeletedItem())
+//            {
+//                for (auto& link : m_Links)
+//                {
+//                    if (link.Id == deletedLinkId)
+//                    {
+//                        m_Links.erase(&link);
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            // You may reject link deletion by calling:
+//            // ed::RejectDeletedItem();
+//        }
+//    }
+//    ed::EndDelete();
+//
+//    ed::End();
+//    ed::SetCurrentEditor(nullptr);
+//    firstframe = false;
+//}
+
+
+
+#include "Application.h"
+
+namespace MyApp
+{
+	const int start_menu_sections_count = 1;
+	const char* start_menu_texts[]
+	{
+		"Numerical mathematics"
+	};
+	void (*menus[])()
+	{
+		ComputationalMathematics
+	};
+
+	void ShowMenu()
+	{
+		static int selected = 0;
+		if (ImGui::TreeNode("Menu selection"))
+		{
+			for (int i = 0; i < start_menu_sections_count; i++)
+			{
+				if (ImGui::Selectable(start_menu_texts[i], selected == i))
+					selected = i;
+			}
+
+
+			ImGui::TreePop();
+		}
+
+		if (selected > -1 && selected < start_menu_sections_count)
+			menus[selected]();
+
+	}
+}
+
+
+			L[0][0] = sqrt(A[0][0]);
+			for (int i = 1; i < N; ++i)
+				L[i][0] = A[i][0] / L[0][0];
+
+			for (int i = 1; i < N; ++i)
+			{
+				sqr_sum = A[i][i];
+				for (int p = 0; p < i; ++p) {
+					sqr_sum -= pow(L[i][p], 2);
+				}
+				L[i][i] = sqrt(sqr_sum);
+			}
+
+			for (int i = 1; i < N - 1; ++i)
+			{
+				for (int j = i + 1; j < N; ++j)
+				{
+					sqr_sum = A[j][i];
+					for (int p = 0; p < i; ++p) {
+						sqr_sum -= L[i][p] * L[j][p];
+					}
+
+					L[j][i] = 1. / L[i][i] * sqr_sum;
+				}
+			}
+
+			const variable* cur_v = vars.begin();
+			for (int i{ 0 }; i < vars_count; ++i, cur_v++)
+			{
+				vars[i]->name = cur_v->name;
+				vars[i]->value = cur_v->value;
+			}
+
+
+
+
+			// Р­РєСЃС‚СЂР°РїРѕР»СЏС†РёРѕРЅРЅС‹Р№ РјРµС‚РѕРґ РђРґР°РјСЃР° 4-РіРѕ РїРѕСЂСЏРґРєР°
+			double* qk = (double*)malloc(sizeof(double) * (arguments_count));
+			for (int i = 0; i < arguments_count; ++i) qk[i] = (double*)malloc(sizeof(double) * (arguments_count - i));
+
+			for (int row = 0; row < N_shift * 2; ++row)
+			{
+				qk[0][row] = table_values[5][row] = table_values[1][row];
+
+				for (int column = 1; column < row + 1; ++column)
+					qk[column][row - column] = qk[column - 1][row - column] - qk[column - 1][row - column + 1];
+			}
+
+			for (int row = N_shift * 2; row < arguments_count; ++row)
+			{
+				yk = table_values[5][row - 1];
+
+				for (int column = 1; column < row + 1; ++column)
+					qk[column][row - column] = qk[column - 1][row - column] - qk[column - 1][row - column + 1];
+
+				// qm в€†qm-1 в€†2qm-2 в€†3qm-3 в€†4qm-4
+
+				table_values[5][row] = yk;
+				for (int col = 0; col < N_shift; ++col)
+				{
+
+				}
+
+			}
+
+			for (int i = 0; i < arguments_count; ++i) free(qk[i]);
+			free(qk);
+
+
+#ifndef	_PYTHON_GUI_H_
+#define	_PYTHON_GUI_H_
+
+void create_window();
+
+#endif // _PYTHON_GUI_H_
+
+
+
+#include <Python.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <direct.h>
+
+#include "python_gui.h"
+
+void create_window() 
+{
+
+	//PyObject* pInt;
+
+	//Py_Initialize();
+
+	//PyRun_SimpleString("print('Hello World from Embedded Python!!!')");
+
+	//Py_Finalize();
+
+	//printf("\nPress any key to exit...\n");
+	//if (!_getch()) _getch();
+	//return 0;
+
+
+	PyObject* pModule, * pFunc, * pArgs, * pValue; // pointers to Python objects
+	double x, y;
+	x = 2.0; y = 3.0; // values to be added
+	Py_Initialize(); // initialize Python
+
+	PyRun_SimpleString("import sys");
+	PyRun_SimpleString("import os");
+	PyRun_SimpleString("sys.path.append(os.getcwd())");
+
+	// import module
+	pModule = PyImport_Import(PyUnicode_FromString("Py_graphlib"));
+	PyErr_Print();
+	if (!pModule) printf_s("Failed to load <Py_graphlib.py>");
+	// get reference
+	pFunc = PyObject_GetAttrString(pModule, "create_graph");
+	pArgs = PyTuple_New(2); // define tuple of 2 arguments
+	PyTuple_SetItem(pArgs, 0, PyFloat_FromDouble(x)); // set 1st argument
+	PyTuple_SetItem(pArgs, 1, PyFloat_FromDouble(y)); // set 2nd argument
+	pValue = PyObject_CallObject(pFunc, pArgs); // call Python function
+	printf_s("x + y = %lf", PyFloat_AsDouble(pValue));
+
+	Py_DECREF(pArgs); // clean up
+	Py_DECREF(pFunc);
+	Py_DECREF(pModule);
+	Py_Finalize(); // finish Python
+}
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def create_graph(x, y):
+	x = np.random.randint(low=1, high=11, size=50)
+	y = x + np.random.randint(1, 5, size=x.size)
+	data = np.column_stack((x, y))
+
+	fig, (ax1, ax2) = plt.subplots(
+		nrows=1, ncols=2,
+		figsize=(8, 4)
+	)
+
+	ax1.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
+	ax1.set_title('Scatter: $x$ versus $y$')
+	ax1.set_xlabel('$x$')
+	ax1.set_ylabel('$y$')
+
+	ax2.hist(
+		data, bins=np.arange(data.min(), data.max()),
+		label=('x', 'y')
+	)
+
+	ax2.legend(loc=(0.65, 0.8))
+	ax2.set_title('Frequencies of $x$ and $y$')
+	ax2.yaxis.tick_right()
+
+	plt.show()
+
 
 
 
@@ -24,10 +716,10 @@
 		else return 1;
 	}
 
-		if (ImGui::Button("Вычислить моменты весовой функции с заданным числом делений\n(зависит от весовой функции, промежутка и числа делений)"))
+		if (ImGui::Button("Р’С‹С‡РёСЃР»РёС‚СЊ РјРѕРјРµРЅС‚С‹ РІРµСЃРѕРІРѕР№ С„СѓРЅРєС†РёРё СЃ Р·Р°РґР°РЅРЅС‹Рј С‡РёСЃР»РѕРј РґРµР»РµРЅРёР№\n(Р·Р°РІРёСЃРёС‚ РѕС‚ РІРµСЃРѕРІРѕР№ С„СѓРЅРєС†РёРё, РїСЂРѕРјРµР¶СѓС‚РєР° Рё С‡РёСЃР»Р° РґРµР»РµРЅРёР№)"))
 		{
 			//moments[i] = get_integration_compound_middle_rectange(f, variables, 0, 1, fixed_A, fixed_B, divisions_count);
-			// Вычисление моментов по СКФ средних прямоугольников, оптимизированное
+			// Р’С‹С‡РёСЃР»РµРЅРёРµ РјРѕРјРµРЅС‚РѕРІ РїРѕ РЎРљР¤ СЃСЂРµРґРЅРёС… РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєРѕРІ, РѕРїС‚РёРјРёР·РёСЂРѕРІР°РЅРЅРѕРµ
 			double h = (B - A) / (double)divisions_count;
 
 			for (int i = 0; i < arguments_count * 2; ++i)
@@ -107,7 +799,7 @@ double calculate_f2_deriative_result(double x)
 
 double calculate_f2_deriative2_result(double x)
 {
-	// Сделано при помощи калькулятора и текстовых замен
+	// РЎРґРµР»Р°РЅРѕ РїСЂРё РїРѕРјРѕС‰Рё РєР°Р»СЊРєСѓР»СЏС‚РѕСЂР° Рё С‚РµРєСЃС‚РѕРІС‹С… Р·Р°РјРµРЅ
 	//
 	//((2*x^4+4*x^3+2*x^2)*sin(x)^2+((8*x^3+12*x^2+4*x)*cos(x)-x^4-2*x^3+5*x^2+6*x+2)*sin(x)+((-2*x^4)-4*x^3+4*x^2+6*x+2)*cos(x)^2+((-4*x^3)-6*x^2-2*x)*cos(x))/(x^6+3*x^5+3*x^4+x^3)
 	return ((2 * pow(x, 4) + 4 * pow(x, 3) + 2 * pow(x, 2)) * pow(sin(x), 2) + ((8 * pow(x, 3) + 12 * pow(x, 2) + 4 * x) * cos(x) - pow(x, 4) - 2 * pow(x, 3) + 5 * pow(x, 2) + 6 * x + 2) * sin(x) +
@@ -118,35 +810,35 @@ void nonlinear_equation_dbg()
 {
 	const int text_count = 4;
 	const char* Text[] = {
-		"Метод секущих",
-		"Метод бисекций",
-		"Метод Ньютона",
-		"Модифицированный метод Ньютона"
+		"РњРµС‚РѕРґ СЃРµРєСѓС‰РёС…",
+		"РњРµС‚РѕРґ Р±РёСЃРµРєС†РёР№",
+		"РњРµС‚РѕРґ РќСЊСЋС‚РѕРЅР°",
+		"РњРѕРґРёС„РёС†РёСЂРѕРІР°РЅРЅС‹Р№ РјРµС‚РѕРґ РќСЊСЋС‚РѕРЅР°"
 	};
 
-	printf_s("Функция f(x) = ");
+	printf_s("Р¤СѓРЅРєС†РёСЏ f(x) = ");
 	printf_s(function2_view());
 	printf_s("\n");
 
 	double A, B, eps;
 	int segments_count;
 
-	printf_s("Вводите числа в виде 1 или 0,1\n");
+	printf_s("Р’РІРѕРґРёС‚Рµ С‡РёСЃР»Р° РІ РІРёРґРµ 1 РёР»Рё 0,1\n");
 	do
 	{
-		printf_s("Введите левую и правую границу отрезка поиска решения: ");
+		printf_s("Р’РІРµРґРёС‚Рµ Р»РµРІСѓСЋ Рё РїСЂР°РІСѓСЋ РіСЂР°РЅРёС†Сѓ РѕС‚СЂРµР·РєР° РїРѕРёСЃРєР° СЂРµС€РµРЅРёСЏ: ");
 		scanf_s("%lf%lf", &A, &B);
 	} while (B - A <= 0);
 
 	do
 	{
-		printf_s("Введите количество разделений отрезка: ");
+		printf_s("Р’РІРµРґРёС‚Рµ РєРѕР»РёС‡РµСЃС‚РІРѕ СЂР°Р·РґРµР»РµРЅРёР№ РѕС‚СЂРµР·РєР°: ");
 		scanf_s("%d", &segments_count);
 	} while (segments_count <= 0);
 
 	eps = input_epsilon();
 
-	printf_s("Выберите метод поиска решения: ");
+	printf_s("Р’С‹Р±РµСЂРёС‚Рµ РјРµС‚РѕРґ РїРѕРёСЃРєР° СЂРµС€РµРЅРёСЏ: ");
 	int choice = choice_menu_h(Text, text_count);
 	finding_roots_method frm = (finding_roots_method)choice;
 
@@ -155,8 +847,8 @@ void nonlinear_equation_dbg()
 	double* solutions = non_linear_equation(&solutions_count, A, B, segments_count, eps, frm, calculate_function2_result, calculate_f2_deriative_result, calculate_f2_deriative2_result);
 	stopTimer();
 
-	printf_s("\nВремя поиска решений - %lf\n", getTimerClock());
-	printf_s("\nОтвет:\nКоличество решений - %d\n", solutions_count);
+	printf_s("\nР’СЂРµРјСЏ РїРѕРёСЃРєР° СЂРµС€РµРЅРёР№ - %lf\n", getTimerClock());
+	printf_s("\nРћС‚РІРµС‚:\nРљРѕР»РёС‡РµСЃС‚РІРѕ СЂРµС€РµРЅРёР№ - %d\n", solutions_count);
 	print_solutions(solutions, solutions_count);
 }
 
@@ -175,11 +867,11 @@ void nonlinear_equation_dbg()
 
 
 
-		if (ImGui::Button("Получить информацию из файла calculation_functions.txt"))
+		if (ImGui::Button("РџРѕР»СѓС‡РёС‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ РёР· С„Р°Р№Р»Р° calculation_functions.txt"))
 		{
-			printf_s("Выберите тип записи графа в файле для чтения: ");
+			printf_s("Р’С‹Р±РµСЂРёС‚Рµ С‚РёРї Р·Р°РїРёСЃРё РіСЂР°С„Р° РІ С„Р°Р№Р»Рµ РґР»СЏ С‡С‚РµРЅРёСЏ: ");
 
-			printf_s("Выберите файл с графом: ");
+			printf_s("Р’С‹Р±РµСЂРёС‚Рµ С„Р°Р№Р» СЃ РіСЂР°С„РѕРј: ");
 			char* path = file_choice_menu_stdir();
 
 			FILE* f;
@@ -212,7 +904,7 @@ void nonlinear_equation_dbg()
 
 
 
-		//// Переменные
+		//// РџРµСЂРµРјРµРЅРЅС‹Рµ
 		//static int variables_count = 1; ImGui::InputInt("input int", &variables_count);
 
 		//static char variable_name[10] = "";
@@ -222,7 +914,7 @@ void nonlinear_equation_dbg()
 		//	ImGui::Text("IsItemHovered: %d", ImGui::IsItemHovered());
 		//	for (int i = 0; i < variables_count; i++)
 		//	{
-		//		// Ввод переменных
+		//		// Р’РІРѕРґ РїРµСЂРµРјРµРЅРЅС‹С…
 		//		ImGui::InputText("default", variable_name, 10); ImGui::SameLine(0, 20);
 		//		ImGui::DragFloat("Value", &value);
 		//	}
@@ -239,7 +931,7 @@ void nonlinear_equation_dbg()
 	//	printf_s("  ");
 	//	//calculate_all_combinations_by_formula(n);
 	//	printf_s("\n");
-	//	printf_s("Результат: %d\n\n", res);
+	//	printf_s("Р РµР·СѓР»СЊС‚Р°С‚: %d\n\n", res);
 
 	//	calculate_by_burnside(n);
 	//}
@@ -260,7 +952,7 @@ void nonlinear_equation_dbg()
 
 
 // f(xi, ..., xi+k)
-// 1 столбец f(x_0) ... f(x_degree)
+// 1 СЃС‚РѕР»Р±РµС† f(x_0) ... f(x_degree)
 		//printf_s("[0, %d] | f(x%d) = %lf\n", i, i, fk[0][i]);
 
 			//printf_s("[%d, %d] | f(x%d,...,x%d) | [%d, %d] - [%d, %d] | x%d - x%d\n", k, i, i, i + k, k - 1, i+1, k - 1, i, i, i + k);
@@ -307,17 +999,17 @@ void PyGraph_Finish() // destructor: release graphlib.py
 	//show_complex();
 	//show_squares_intersection_area();
 
-//// Если достаточное условие сходимости метода Ньютона не выполнено
+//// Р•СЃР»Рё РґРѕСЃС‚Р°С‚РѕС‡РЅРѕРµ СѓСЃР»РѕРІРёРµ СЃС…РѕРґРёРјРѕСЃС‚Рё РјРµС‚РѕРґР° РќСЊСЋС‚РѕРЅР° РЅРµ РІС‹РїРѕР»РЅРµРЅРѕ
 //if (fdr == 0 || fr * function_deriative2(x) <= 0)
 //{
-//	x = ls[i]->A + l / 101 * (rand() % 101); // один из концов 101 деления
+//	x = ls[i]->A + l / 101 * (rand() % 101); // РѕРґРёРЅ РёР· РєРѕРЅС†РѕРІ 101 РґРµР»РµРЅРёСЏ
 //	fdr = function_deriative(x);
 //	fr = function(x);
-//	printf_s("\nНе выполнено условие сходимости, x изменён\n");
+//	printf_s("\nРќРµ РІС‹РїРѕР»РЅРµРЅРѕ СѓСЃР»РѕРІРёРµ СЃС…РѕРґРёРјРѕСЃС‚Рё, x РёР·РјРµРЅС‘РЅ\n");
 //}
 
 
-Отладка фибоначчиевых деревьев
+РћС‚Р»Р°РґРєР° С„РёР±РѕРЅР°С‡С‡РёРµРІС‹С… РґРµСЂРµРІСЊРµРІ
 
 		printf_s("\n--{CONSOLIDATING}--\n");
 		print_fibonacci_heap(fh);
@@ -342,17 +1034,17 @@ printf_s("\n");
 	printf_s("\n");
 
 	printf_s("\n\n");
-	printf_s("Дерево:\n");
+	printf_s("Р”РµСЂРµРІРѕ:\n");
 	print_fibonacci_heap(fh);
 	printf_s("\n");
 
 	printf_s("\n");
-	printf_s("Дерево после уменьшения ключа:\n");
+	printf_s("Р”РµСЂРµРІРѕ РїРѕСЃР»Рµ СѓРјРµРЅСЊС€РµРЅРёСЏ РєР»СЋС‡Р°:\n");
 	print_fibonacci_heap(fh);
 	printf_s("\n");
 
 	printf_s("\n");
-	printf_s("Дерево после вытаскивания:\n");
+	printf_s("Р”РµСЂРµРІРѕ РїРѕСЃР»Рµ РІС‹С‚Р°СЃРєРёРІР°РЅРёСЏ:\n");
 	print_fibonacci_heap(fh);
 	printf_s("\n");
 
@@ -390,7 +1082,7 @@ printf_s("\n");
 			printf_s("\n");
 
 
-	printf_s("Итоговое дерево после изъятия минимума:\n");
+	printf_s("РС‚РѕРіРѕРІРѕРµ РґРµСЂРµРІРѕ РїРѕСЃР»Рµ РёР·СЉСЏС‚РёСЏ РјРёРЅРёРјСѓРјР°:\n");
 	print_fibonacci_heap(fh);
 
 
@@ -422,7 +1114,7 @@ printf_s("\n");
 	//double t1 = legendre_time(iterations, legendre_symbol);
 	////legendre_time(iterations, legendre_symbol_2);
 	//double t2 = legendre_time(iterations, legendre_symbol_3);
-	//printf("Разница во времени выполнения: %f\n\n", (float)(t1 - t2));
+	//printf("Р Р°Р·РЅРёС†Р° РІРѕ РІСЂРµРјРµРЅРё РІС‹РїРѕР»РЅРµРЅРёСЏ: %f\n\n", (float)(t1 - t2));
 
 //graph* new_graph = graph_init(g->count);
 //
@@ -524,13 +1216,13 @@ printf_s("\n");
 //
 //	cr = cairo_create(surface);
 //
-//	/* Рисуем верхнюю линию */
+//	/* Р РёСЃСѓРµРј РІРµСЂС…РЅСЋСЋ Р»РёРЅРёСЋ */
 //	cairo_set_source_rgba(cr, 0, 1, 0, 1);
 //	cairo_move_to(cr, 0, (HEIGHT / 2) / 100 * 20);
 //	cairo_line_to(cr, WIDTH, (HEIGHT / 2) / 100 * 20);
 //	cairo_stroke(cr);
 //
-//	/* Рисуем нижнюю линию */
+//	/* Р РёСЃСѓРµРј РЅРёР¶РЅСЋСЋ Р»РёРЅРёСЋ */
 //	cairo_set_source_rgba(cr, 1, 0, 0, 1);
 //	cairo_move_to(cr, 0, HEIGHT / 100 * 90);
 //	cairo_line_to(cr, WIDTH, HEIGHT / 100 * 90);
@@ -663,82 +1355,82 @@ printf_s("\n");
 //}
 //*/
 ///*
-//void bigint_subtract_bigint(big_int* b1, const big_int* b2) // big_int 1 и 2 (из b1 вычитается b2)
+//void bigint_subtract_bigint(big_int* b1, const big_int* b2) // big_int 1 Рё 2 (РёР· b1 РІС‹С‡РёС‚Р°РµС‚СЃСЏ b2)
 //{
-//	int temp = 0; // временная
-//	unsigned int rank = 0; // рабочий разряд
-//	int i = 0, j = 0; // итераторы
+//	int temp = 0; // РІСЂРµРјРµРЅРЅР°СЏ
+//	unsigned int rank = 0; // СЂР°Р±РѕС‡РёР№ СЂР°Р·СЂСЏРґ
+//	int i = 0, j = 0; // РёС‚РµСЂР°С‚РѕСЂС‹
 //
-//	bigint_realloc_to_newlength(b1, b2->length); // Расширяем big_int1 до вычитаемого big_int2
-//	while (rank < b2->length) // Проходим все разряды big_int2
+//	bigint_realloc_to_newlength(b1, b2->length); // Р Р°СЃС€РёСЂСЏРµРј big_int1 РґРѕ РІС‹С‡РёС‚Р°РµРјРѕРіРѕ big_int2
+//	while (rank < b2->length) // РџСЂРѕС…РѕРґРёРј РІСЃРµ СЂР°Р·СЂСЏРґС‹ big_int2
 //	{
-//		temp = (int)b1->number[rank] - (int)b2->number[rank]; // Записываем разницу между разрядом rank в big_int1 и big_int2 
-//		if (temp >= 0) // разница >= 0 
+//		temp = (int)b1->number[rank] - (int)b2->number[rank]; // Р—Р°РїРёСЃС‹РІР°РµРј СЂР°Р·РЅРёС†Сѓ РјРµР¶РґСѓ СЂР°Р·СЂСЏРґРѕРј rank РІ big_int1 Рё big_int2 
+//		if (temp >= 0) // СЂР°Р·РЅРёС†Р° >= 0 
 //		{
-//			b1->number[rank] = temp; // записываем разницу
+//			b1->number[rank] = temp; // Р·Р°РїРёСЃС‹РІР°РµРј СЂР°Р·РЅРёС†Сѓ
 //		}
 //		else
 //		{
-//			for (i = rank + 1; i < b1->length; ++i) // Ищем верхний разряд в big_int1 не равный 0, начиная с rank + 1
+//			for (i = rank + 1; i < b1->length; ++i) // РС‰РµРј РІРµСЂС…РЅРёР№ СЂР°Р·СЂСЏРґ РІ big_int1 РЅРµ СЂР°РІРЅС‹Р№ 0, РЅР°С‡РёРЅР°СЏ СЃ rank + 1
 //			{
 //				if (b1->number[i] > 0)
 //				{
-//					b1->number[i]--; // Вычитаем из него 1
+//					b1->number[i]--; // Р’С‹С‡РёС‚Р°РµРј РёР· РЅРµРіРѕ 1
 //					for (j = rank + 1; j < i; ++j)
 //					{
-//						b1->number[j] = 0xFF; // оборачиваем пройденные нулевые разряды
+//						b1->number[j] = 0xFF; // РѕР±РѕСЂР°С‡РёРІР°РµРј РїСЂРѕР№РґРµРЅРЅС‹Рµ РЅСѓР»РµРІС‹Рµ СЂР°Р·СЂСЏРґС‹
 //					}
-//					break; // Нашли разряд
+//					break; // РќР°С€Р»Рё СЂР°Р·СЂСЏРґ
 //				}
 //			}
 //
-//			if (i < b1->length) // Если нашёлся такой разряд
+//			if (i < b1->length) // Р•СЃР»Рё РЅР°С€С‘Р»СЃСЏ С‚Р°РєРѕР№ СЂР°Р·СЂСЏРґ
 //			{
-//				b1->number[rank] = 256 + temp; // Записываем в рабочий разряд 256 из большего разряда вычесть разницу в этом разряде
+//				b1->number[rank] = 256 + temp; // Р—Р°РїРёСЃС‹РІР°РµРј РІ СЂР°Р±РѕС‡РёР№ СЂР°Р·СЂСЏРґ 256 РёР· Р±РѕР»СЊС€РµРіРѕ СЂР°Р·СЂСЏРґР° РІС‹С‡РµСЃС‚СЊ СЂР°Р·РЅРёС†Сѓ РІ СЌС‚РѕРј СЂР°Р·СЂСЏРґРµ
 //			}
 //			else
 //			{
-//				b1->isNegative = !b1->isNegative; // Делаем число отрицательным
-//				b1->number[rank] = -temp; // Присваиваем разницу в рабочий разряд
+//				b1->isNegative = !b1->isNegative; // Р”РµР»Р°РµРј С‡РёСЃР»Рѕ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рј
+//				b1->number[rank] = -temp; // РџСЂРёСЃРІР°РёРІР°РµРј СЂР°Р·РЅРёС†Сѓ РІ СЂР°Р±РѕС‡РёР№ СЂР°Р·СЂСЏРґ
 //
-//				// Далее нужно обернуть все предыдущие разряды, так как они хранят положительное число
+//				// Р”Р°Р»РµРµ РЅСѓР¶РЅРѕ РѕР±РµСЂРЅСѓС‚СЊ РІСЃРµ РїСЂРµРґС‹РґСѓС‰РёРµ СЂР°Р·СЂСЏРґС‹, С‚Р°Рє РєР°Рє РѕРЅРё С…СЂР°РЅСЏС‚ РїРѕР»РѕР¶РёС‚РµР»СЊРЅРѕРµ С‡РёСЃР»Рѕ
 //
-//				temp = rank; // сохраняем номер разряда, из которого будет вычитаться единица,
-//				// так как нужно отнять все оставшиеся положительные разряды
-//				for (i = rank - 1; i >= 0; --i) // Ищем нижний разряд в big_int1 не равный 0, начиная с rank - 1
+//				temp = rank; // СЃРѕС…СЂР°РЅСЏРµРј РЅРѕРјРµСЂ СЂР°Р·СЂСЏРґР°, РёР· РєРѕС‚РѕСЂРѕРіРѕ Р±СѓРґРµС‚ РІС‹С‡РёС‚Р°С‚СЊСЃСЏ РµРґРёРЅРёС†Р°,
+//				// С‚Р°Рє РєР°Рє РЅСѓР¶РЅРѕ РѕС‚РЅСЏС‚СЊ РІСЃРµ РѕСЃС‚Р°РІС€РёРµСЃСЏ РїРѕР»РѕР¶РёС‚РµР»СЊРЅС‹Рµ СЂР°Р·СЂСЏРґС‹
+//				for (i = rank - 1; i >= 0; --i) // РС‰РµРј РЅРёР¶РЅРёР№ СЂР°Р·СЂСЏРґ РІ big_int1 РЅРµ СЂР°РІРЅС‹Р№ 0, РЅР°С‡РёРЅР°СЏ СЃ rank - 1
 //				{
 //					if (b1->number[i] > 0)
 //					{
-//						b1->number[temp] -= 1; // Забираем из того разряда единицу
+//						b1->number[temp] -= 1; // Р—Р°Р±РёСЂР°РµРј РёР· С‚РѕРіРѕ СЂР°Р·СЂСЏРґР° РµРґРёРЅРёС†Сѓ
 //						for (j = rank - 1; j > i; --j)
 //						{
-//							b1->number[j] = 0xFF; // оборачиваем пройденные нулевые разряды
+//							b1->number[j] = 0xFF; // РѕР±РѕСЂР°С‡РёРІР°РµРј РїСЂРѕР№РґРµРЅРЅС‹Рµ РЅСѓР»РµРІС‹Рµ СЂР°Р·СЂСЏРґС‹
 //						}
-//						b1->number[i] = 256 - b1->number[i]; // оборачиваем этот разряд
+//						b1->number[i] = 256 - b1->number[i]; // РѕР±РѕСЂР°С‡РёРІР°РµРј СЌС‚РѕС‚ СЂР°Р·СЂСЏРґ
 //						temp = i;
 //					}
 //				}
 //
-//				// Все верхние разряды переносим из вычитаемого
+//				// Р’СЃРµ РІРµСЂС…РЅРёРµ СЂР°Р·СЂСЏРґС‹ РїРµСЂРµРЅРѕСЃРёРј РёР· РІС‹С‡РёС‚Р°РµРјРѕРіРѕ
 //				for (i = rank + 1; i < b2->length; ++i)
 //				{
 //					b1->number = b2->number[i];
 //				}
 //
-//				// Если последний разряд оказался равным нулю, уменьшаем big_int
+//				// Р•СЃР»Рё РїРѕСЃР»РµРґРЅРёР№ СЂР°Р·СЂСЏРґ РѕРєР°Р·Р°Р»СЃСЏ СЂР°РІРЅС‹Рј РЅСѓР»СЋ, СѓРјРµРЅСЊС€Р°РµРј big_int
 //				if (b1->number[b1->length - 1] == 0)
 //				{
 //					b1->number = (unsigned char*)realloc(b1->number, sizeof(unsigned char) * (b1->length - 1));
 //					--b1->length;
 //				}
 //
-//				return; // Получилось отрицательное число
+//				return; // РџРѕР»СѓС‡РёР»РѕСЃСЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅРѕРµ С‡РёСЃР»Рѕ
 //			}
 //		}
 //		rank++;
 //	}
 //
-//	// Убираем возможные лишние нули, которые могли получиться в результате вычитания
+//	// РЈР±РёСЂР°РµРј РІРѕР·РјРѕР¶РЅС‹Рµ Р»РёС€РЅРёРµ РЅСѓР»Рё, РєРѕС‚РѕСЂС‹Рµ РјРѕРіР»Рё РїРѕР»СѓС‡РёС‚СЊСЃСЏ РІ СЂРµР·СѓР»СЊС‚Р°С‚Рµ РІС‹С‡РёС‚Р°РЅРёСЏ
 //	temp = b1->length - 1;
 //	while (temp > 0)
 //	{
@@ -755,7 +1447,7 @@ printf_s("\n");
 ///*
 //unsigned char* decimal_to_256chars(unsigned int decimal, unsigned int* chars_l)
 //{
-//	unsigned char* chars = (unsigned char*)malloc(sizeof(unsigned char*)); // результат
+//	unsigned char* chars = (unsigned char*)malloc(sizeof(unsigned char*)); // СЂРµР·СѓР»СЊС‚Р°С‚
 //	int rank = 0;
 //	while (decimal != 0)
 //	{
@@ -767,8 +1459,8 @@ printf_s("\n");
 //	*chars_l = rank;
 //	return chars;
 //}*/
-//// //Плохой алгоритм 2^N		20-2 дня,	40-35 лет
-////void big_int_add_one_decimal(big_int* b, unsigned int c, unsigned int k, unsigned int r) // bigint, число, степень, куда его.
+//// //РџР»РѕС…РѕР№ Р°Р»РіРѕСЂРёС‚Рј 2^N		20-2 РґРЅСЏ,	40-35 Р»РµС‚
+////void big_int_add_one_decimal(big_int* b, unsigned int c, unsigned int k, unsigned int r) // bigint, С‡РёСЃР»Рѕ, СЃС‚РµРїРµРЅСЊ, РєСѓРґР° РµРіРѕ.
 ////{
 ////	if (c == 0) 
 ////	{
@@ -776,7 +1468,7 @@ printf_s("\n");
 ////	}
 ////	while (k > 0)
 ////	{
-////		c = (c + (c << 2)) << 1; // добавляем разряд к десятичному числу
+////		c = (c + (c << 2)) << 1; // РґРѕР±Р°РІР»СЏРµРј СЂР°Р·СЂСЏРґ Рє РґРµСЃСЏС‚РёС‡РЅРѕРјСѓ С‡РёСЃР»Сѓ
 ////		k -= 1;
 ////		if (c > 255) 
 ////		{
@@ -790,8 +1482,8 @@ printf_s("\n");
 ////
 ////void bigint_add_chars(big_int *b, const unsigned char* chars, const unsigned int chars_l)
 ////{
-////	unsigned int t = 0; // сумма разряда
-////	unsigned int rank = 0; // текущий разряд
+////	unsigned int t = 0; // СЃСѓРјРјР° СЂР°Р·СЂСЏРґР°
+////	unsigned int rank = 0; // С‚РµРєСѓС‰РёР№ СЂР°Р·СЂСЏРґ
 ////	bigint_realloc(b, chars_l);
 ////	do
 ////	{
@@ -807,10 +1499,10 @@ printf_s("\n");
 ////		b->number[rank] = t & 255;
 ////		t = (unsigned int)(t >> 8);
 ////
-////		rank += 1; // переходим к следующему разряду
+////		rank += 1; // РїРµСЂРµС…РѕРґРёРј Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СЂР°Р·СЂСЏРґСѓ
 ////	} while (rank < chars_l);
 ////
-////	if (t != 0) // Если что-то осталось
+////	if (t != 0) // Р•СЃР»Рё С‡С‚Рѕ-С‚Рѕ РѕСЃС‚Р°Р»РѕСЃСЊ
 ////	{
 ////		bigint_realloc(b, chars_l + 1);
 ////		b->number[rank] = t;
@@ -818,7 +1510,7 @@ printf_s("\n");
 ////}
 //
 //
-////void bigint_substract_one_char(big_int* big_t, unsigned char ch, unsigned int rank) // big_int, число ch, которое нужно вычесть из разряда rank
+////void bigint_substract_one_char(big_int* big_t, unsigned char ch, unsigned int rank) // big_int, С‡РёСЃР»Рѕ ch, РєРѕС‚РѕСЂРѕРµ РЅСѓР¶РЅРѕ РІС‹С‡РµСЃС‚СЊ РёР· СЂР°Р·СЂСЏРґР° rank
 ////{
 ////	// 10000001 - 10000110|2
 ////	// 
@@ -849,7 +1541,7 @@ printf_s("\n");
 ////		// 1)
 ////		// 
 ////		//-10111111 11111111 01111111 00000000
-////		//-10111111 11111111 01111110 01111111 Ответ
+////		//-10111111 11111111 01111110 01111111 РћС‚РІРµС‚
 ////		// 2)
 ////		// 
 ////
@@ -858,36 +1550,36 @@ printf_s("\n");
 ////	else
 ////	{
 ////
-////		int t = (int)big_t->number[rank] - (int)ch; // разница между разрядом r в big_t и вычитаемым разрядом ch
+////		int t = (int)big_t->number[rank] - (int)ch; // СЂР°Р·РЅРёС†Р° РјРµР¶РґСѓ СЂР°Р·СЂСЏРґРѕРј r РІ big_t Рё РІС‹С‡РёС‚Р°РµРјС‹Рј СЂР°Р·СЂСЏРґРѕРј ch
 ////		if (t < 0)
 ////		{
-////			if (rank == big_t->length - 1)  // Если длина разрядов big_int и rank одинаковы
+////			if (rank == big_t->length - 1)  // Р•СЃР»Рё РґР»РёРЅР° СЂР°Р·СЂСЏРґРѕРІ big_int Рё rank РѕРґРёРЅР°РєРѕРІС‹
 ////			{
 ////				big_t->isNegative = !big_t->isNegative;
-////				big_t->number[rank] = -t; // Присваиваем разницу
+////				big_t->number[rank] = -t; // РџСЂРёСЃРІР°РёРІР°РµРј СЂР°Р·РЅРёС†Сѓ
 ////
-////				bigint_minus_one_in_rank(big_t, rank); // Меняем следующие разряды
+////				bigint_minus_one_in_rank(big_t, rank); // РњРµРЅСЏРµРј СЃР»РµРґСѓСЋС‰РёРµ СЂР°Р·СЂСЏРґС‹
 ////			}
 ////			else
 ////			{
-////				big_t->number[rank] = 256 + t; // 1 (256) из большего разряда - разница
-////				for (int i = rank + 1; i < big_t->length; ++i) // Проходим до верхнего разряда не равного нулю
+////				big_t->number[rank] = 256 + t; // 1 (256) РёР· Р±РѕР»СЊС€РµРіРѕ СЂР°Р·СЂСЏРґР° - СЂР°Р·РЅРёС†Р°
+////				for (int i = rank + 1; i < big_t->length; ++i) // РџСЂРѕС…РѕРґРёРј РґРѕ РІРµСЂС…РЅРµРіРѕ СЂР°Р·СЂСЏРґР° РЅРµ СЂР°РІРЅРѕРіРѕ РЅСѓР»СЋ
 ////				{
 ////					if (big_t->number[i] > 0)
 ////					{
-////						big_t->number[i] -= 1; // Вычитаем из него 1
+////						big_t->number[i] -= 1; // Р’С‹С‡РёС‚Р°РµРј РёР· РЅРµРіРѕ 1
 ////						break;
 ////					}
 ////					else
 ////					{
-////						big_t->number[i] = 255; // оборачиваем другие разряды
+////						big_t->number[i] = 255; // РѕР±РѕСЂР°С‡РёРІР°РµРј РґСЂСѓРіРёРµ СЂР°Р·СЂСЏРґС‹
 ////					}
 ////				}
 ////			}
 ////		}
 ////		else
 ////		{
-////			big_t->number[rank] = t; // записываем разницу
+////			big_t->number[rank] = t; // Р·Р°РїРёСЃС‹РІР°РµРј СЂР°Р·РЅРёС†Сѓ
 ////		}
 ////	}
 ////	bigint_remove_zeros(big_t);

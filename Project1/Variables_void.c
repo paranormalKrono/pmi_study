@@ -12,7 +12,7 @@ variable* variable_alloc()
 	return v;
 }
 
-variable* variable_init(char* name, double value)
+variable* variable_init(const char* name, double value)
 {
 	variable* v = (variable*)malloc(sizeof(variable));
 	if (!v) return NULL;

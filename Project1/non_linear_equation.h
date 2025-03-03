@@ -1,5 +1,7 @@
 #ifndef	_NON_LINEAR_EQUATION_H_
 #define	_NON_LINEAR_EQUATION_H_
+#pragma once
+
 #include "line_segment.h"
 #include "Shunting_yard.h"
 

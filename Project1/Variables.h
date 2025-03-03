@@ -3,12 +3,12 @@
 
 typedef struct variable
 {
-	char* name;
+	const char* name;
 	double value;
 } variable;
 
 variable* variable_alloc();
-variable* variable_init(char* name, double value);
+variable* variable_init(const char* name, double value);
 int variable_compare_name(const variable* v1, const variable* v2);
 int variable_compare(const variable* v1, const variable* v2);
 void variable_free(variable* v);

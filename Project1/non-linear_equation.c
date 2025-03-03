@@ -299,7 +299,7 @@ double* non_linear_equation(int* solutions_count, double A, double B, int segmen
 		const queue* deriative_rpn = va_arg(deriatives_rpn_list, queue*);
 		const queue* deriative_rpn2 = va_arg(deriatives_rpn_list, queue*);
 
-		modificated_newton_method(rpn, deriative_rpn_, deriative_rpn2_, vars, var_id, vars_count, solutions_ls, *solutions_count, eps);
+		modificated_newton_method(rpn, deriative_rpn, deriative_rpn2, vars, var_id, vars_count, solutions_ls, *solutions_count, eps);
 		break;
 	}
 

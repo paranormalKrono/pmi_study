@@ -1,5 +1,7 @@
 #ifndef	_NUMERICAL_INTEGRATION_H_
 #define	_NUMERICAL_INTEGRATION_H_
+#pragma once
+
 #include "Shunting_yard.h"
 #include <malloc.h>
 
