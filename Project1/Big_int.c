@@ -409,7 +409,7 @@ void bigint_realloc_to_newhigherlength(big_int* b, unsigned int new_length)
 		unsigned char* new_n = (unsigned char*)realloc(b->number, sizeof(unsigned char) * (new_length));
 		if (new_n == NULL) 
 		{
-			new_n = (unsigned char*)malloc(new_n, sizeof(unsigned char) * (new_length));
+			new_n = (unsigned char*)realloc(new_n, sizeof(unsigned char) * (new_length));
 			memcpy_s(new_n, new_length * sizeof(unsigned char), b->number, new_length * sizeof(unsigned char));
 		}
 		b->number = new_n;

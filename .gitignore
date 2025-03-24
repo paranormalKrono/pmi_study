@@ -14,8 +14,6 @@ Project1.sdf
 Project1.sln
 .vs/ProjectSettings.json
 .vs/VSWorkspaceState.json
-*.jpg
-*.png
 .vs/
 packages/
 Project1/.idea/
@@ -24,3 +22,5 @@ Project1/__pycache__/
 .idea/
 Project1/x64/
 Release/
+Images/
+Project1/data/
