@@ -49,7 +49,7 @@ RU
 17. DFA: sat2 formula check with variables
 18. DFA: implement, intersection, union, difference operations (failure)
 
-3 Term (C, third task - C#)
+3 Term (C, third and fifth tasks - C#)
 -
 1. Small tasks: bracket sequance, max value segment, repeated int
 2. Complex numbers: creation, printing, square, protos printing using universal (void* as data) Binary trees
@@ -57,7 +57,8 @@ RU
 https://en.wikipedia.org/wiki/Julia_set
 ![alt text](readme_assets/Julia_set.png)
 4. Graphs: Transitive closure using Purdom algorithm
-5. Matrices and Geometry: calculating landscape surface area from digital elevation models by Jeff S. Jenness, an image with heights is used as input
+5. Matrices and Geometry: calculating landscape surface area from digital elevation models by Jeff S. Jenness, an image with heights is used as input (C#)
+
 ![alt text](readme_assets/Surface_area.png)
 6. Geometry: Algorithm for constructing an overlay of polygons and polyhedrons (Failure)
 
